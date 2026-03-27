@@ -1,3 +1,5 @@
+import { runStdio } from "./commands/stdio.js";
+
 function execName(): string {
   const value = process.argv[1];
   if (!value) {
@@ -16,6 +18,9 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
+    case "stdio":
+      await runStdio();
+      return;
     default:
       console.error(`unknown command: ${command}`);
       process.exitCode = 1;

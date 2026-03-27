@@ -9,6 +9,9 @@
     "fmt": "oxfmt",
     "lint": "oxlint"
   },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0"
+  },
   "devDependencies": {
     "@types/node": "^24.5.2",
     "@typescript/native-preview": "^7.0.0-dev",

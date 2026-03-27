@@ -1,4 +1,5 @@
 import { runAuth } from "./commands/auth.js";
+import { runHttp } from "./commands/http.js";
 import { runStdio } from "./commands/stdio.js";
 import { normalizeDirectories } from "./path-validation.js";
 
@@ -27,6 +28,9 @@ async function main(): Promise<void> {
       return;
     case "stdio":
       await runStdio(allowedDirectories);
+      return;
+    case "http":
+      await runHttp(allowedDirectories);
       return;
     default:
       console.error(`unknown command: ${command}`);

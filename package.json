@@ -4,13 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsgo -p tsconfig.json",
+    "build": "tsgo -p tsconfig.json && vite build --config ui/vite.config.ts",
+    "build:server": "tsgo -p tsconfig.json",
+    "build:ui": "vite build --config ui/vite.config.ts",
     "dev": "tsgo -p tsconfig.json --watch",
     "fmt": "oxfmt",
     "lint": "oxlint",
     "test": "vitest run"
   },
   "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.3.1",
     "@modelcontextprotocol/sdk": "^1.28.0",
     "express": "^5.2.1",
     "zod": "^4.3.6"
@@ -21,6 +24,8 @@
     "@typescript/native-preview": "^7.0.0-dev",
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0",
+    "vite": "^7.3.1",
+    "vite-plugin-singlefile": "^2.3.2",
     "vitest": "^3.2.4"
   },
   "engines": {

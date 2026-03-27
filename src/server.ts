@@ -1,9 +1,18 @@
+import { readFile } from "node:fs/promises";
+
+import { registerAppResource, registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
-import { addDocumentToDraftConfig, addDocumentToDraftHandler } from "./tools/add-document-to-draft.js";
-import { addParticipantToDraftConfig, addParticipantToDraftHandler } from "./tools/add-participant-to-draft.js";
+import {
+  addDocumentToDraftConfig,
+  addDocumentToDraftHandler,
+} from "./tools/add-document-to-draft.js";
+import {
+  addParticipantToDraftConfig,
+  addParticipantToDraftHandler,
+} from "./tools/add-participant-to-draft.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
 import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-flow-draft.js";
@@ -37,29 +46,13 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     createDocumentHandler(documentClient, allowedDirectories),
   );
 
-  server.registerTool(
-    "list_documents",
-    listDocumentsConfig,
-    listDocumentsHandler(documentClient),
-  );
+  server.registerTool("list_documents", listDocumentsConfig, listDocumentsHandler(documentClient));
 
-  server.registerTool(
-    "get_document",
-    getDocumentConfig,
-    getDocumentHandler(documentClient),
-  );
+  server.registerTool("get_document", getDocumentConfig, getDocumentHandler(documentClient));
 
-  server.registerTool(
-    "add_party",
-    addPartyConfig,
-    addPartyHandler(documentClient),
-  );
+  server.registerTool("add_party", addPartyConfig, addPartyHandler(documentClient));
 
-  server.registerTool(
-    "start_signing",
-    startSigningConfig,
-    startSigningHandler(documentClient),
-  );
+  server.registerTool("start_signing", startSigningConfig, startSigningHandler(documentClient));
 
   server.registerTool(
     "remind_document",
@@ -85,11 +78,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     listFlowDraftsHandler(journeyClient),
   );
 
-  server.registerTool(
-    "get_flow_draft",
-    getFlowDraftConfig,
-    getFlowDraftHandler(journeyClient),
-  );
+  server.registerTool("get_flow_draft", getFlowDraftConfig, getFlowDraftHandler(journeyClient));
 
   server.registerTool(
     "delete_flow_draft",
@@ -97,11 +86,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     deleteFlowDraftHandler(journeyClient),
   );
 
-  server.registerTool(
-    "start_flow",
-    startFlowConfig,
-    startFlowHandler(journeyClient),
-  );
+  server.registerTool("start_flow", startFlowConfig, startFlowHandler(journeyClient));
 
   server.registerTool(
     "add_participant_to_draft",
@@ -109,11 +94,36 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     addParticipantToDraftHandler(journeyClient),
   );
 
-  server.registerTool(
+  registerAppTool(
+    server,
     "get_time",
-    { description: "Returns the current server time" },
+    {
+      description: "Returns the current server time",
+      _meta: {
+        ui: {
+          resourceUri: getTimeResourceUri,
+        },
+      },
+    },
     getTimeHandler(),
   );
 
+  registerAppResource(server, "get_time_ui", getTimeResourceUri, {}, async () => ({
+    contents: [
+      {
+        uri: getTimeResourceUri,
+        mimeType: "text/html;profile=mcp-app",
+        text: await readGetTimeHtml(),
+      },
+    ],
+  }));
+
   return server;
+}
+
+const getTimeResourceUri = "ui://get_time/app.html";
+
+async function readGetTimeHtml(): Promise<string> {
+  const filePath = new URL("../ui/get-time/app.html", import.meta.url);
+  return readFile(filePath, "utf8");
 }

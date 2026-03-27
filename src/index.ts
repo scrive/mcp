@@ -1,3 +1,4 @@
+import { runAuth } from "./commands/auth.js";
 import { runStdio } from "./commands/stdio.js";
 
 function execName(): string {
@@ -18,6 +19,9 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
+    case "auth":
+      await runAuth();
+      return;
     case "stdio":
       await runStdio();
       return;

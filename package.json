@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "build": "tsgo -p tsconfig.json",
-    "dev": "tsgo -p tsconfig.json --watch"
+    "dev": "tsgo -p tsconfig.json --watch",
+    "fmt": "oxfmt",
+    "lint": "oxlint"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
-    "@typescript/native-preview": "^7.0.0-dev"
+    "@typescript/native-preview": "^7.0.0-dev",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0"
   },
   "engines": {
     "node": ">=24"

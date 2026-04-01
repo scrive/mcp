@@ -46,4 +46,12 @@ export class JourneyClient extends HttpClient {
     });
     return response.data;
   }
+
+  async getFlowDraft(draftId: string): Promise<JourneyDraft> {
+    const response = await this.request<JourneyDraft>({
+      url: `/journey/external/drafts/${draftId}`,
+      method: "GET",
+    });
+    return response.data;
+  }
 }

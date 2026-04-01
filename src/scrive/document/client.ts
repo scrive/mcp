@@ -41,4 +41,16 @@ export class DocumentClient extends HttpClient {
     });
     return response.data;
   }
+
+  async updateDocument(documentId: string, document: ScriveDocument): Promise<ScriveDocument> {
+    const response = await this.request<ScriveDocument>({
+      url: `/api/v2/documents/${documentId}/update`,
+      method: "POST",
+      body: new URLSearchParams({
+        document_id: documentId,
+        document: JSON.stringify(document),
+      }),
+    });
+    return response.data;
+  }
 }

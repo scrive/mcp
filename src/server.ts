@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { DocumentClient } from "./scrive/document/client.js";
+import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
 import { getTimeHandler } from "./tools/get-time.js";
@@ -35,6 +36,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "get_document",
     getDocumentConfig,
     getDocumentHandler(documentClient),
+  );
+
+  server.registerTool(
+    "add_party",
+    addPartyConfig,
+    addPartyHandler(documentClient),
   );
 
   server.registerTool(

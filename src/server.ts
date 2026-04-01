@@ -6,6 +6,7 @@ import { createDocumentConfig, createDocumentHandler } from "./tools/create-docu
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
 import { getTimeHandler } from "./tools/get-time.js";
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
+import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
 import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
 
 export interface ServerDependencies {
@@ -49,6 +50,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "start_signing",
     startSigningConfig,
     startSigningHandler(documentClient),
+  );
+
+  server.registerTool(
+    "remind_document",
+    remindDocumentConfig,
+    remindDocumentHandler(documentClient),
   );
 
   server.registerTool(

@@ -60,4 +60,11 @@ export class DocumentClient extends HttpClient {
       method: "POST",
     });
   }
+
+  async remindDocument(documentId: string): Promise<void> {
+    await this.request({
+      url: `/api/v2/documents/${documentId}/remind`,
+      method: "POST",
+    });
+  }
 }

@@ -54,4 +54,12 @@ export class JourneyClient extends HttpClient {
     });
     return response.data;
   }
+
+  async deleteFlowDraft(draftId: string): Promise<void> {
+    await this.request({
+      url: `/journey/external/drafts/${draftId}`,
+      method: "DELETE",
+
+    });
+  }
 }

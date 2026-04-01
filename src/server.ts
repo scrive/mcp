@@ -4,6 +4,7 @@ import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
 import { addDocumentToDraftConfig, addDocumentToDraftHandler } from "./tools/add-document-to-draft.js";
 import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-flow-draft.js";
+import { deleteFlowDraftConfig, deleteFlowDraftHandler } from "./tools/delete-flow-draft.js";
 import { getFlowDraftConfig, getFlowDraftHandler } from "./tools/get-flow-draft.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
@@ -86,6 +87,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "get_flow_draft",
     getFlowDraftConfig,
     getFlowDraftHandler(journeyClient),
+  );
+
+  server.registerTool(
+    "delete_flow_draft",
+    deleteFlowDraftConfig,
+    deleteFlowDraftHandler(journeyClient),
   );
 
   server.registerTool(

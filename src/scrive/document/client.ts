@@ -33,4 +33,12 @@ export class DocumentClient extends HttpClient {
     });
     return response.data;
   }
+
+  async getDocument(documentId: string): Promise<ScriveDocument> {
+    const response = await this.request<ScriveDocument>({
+      url: `/api/v2/documents/${documentId}/get`,
+      method: "GET",
+    });
+    return response.data;
+  }
 }

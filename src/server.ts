@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { DocumentClient } from "./scrive/document/client.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
+import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
 import { getTimeHandler } from "./tools/get-time.js";
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
 
@@ -28,6 +29,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "list_documents",
     listDocumentsConfig,
     listDocumentsHandler(documentClient),
+  );
+
+  server.registerTool(
+    "get_document",
+    getDocumentConfig,
+    getDocumentHandler(documentClient),
   );
 
   server.registerTool(

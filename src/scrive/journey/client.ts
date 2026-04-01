@@ -3,6 +3,7 @@ import type {
   JourneyDocument,
   JourneyDraft,
   JourneyListDraftsResponse,
+  JourneyStartFlowResponse,
 } from "./types.js";
 
 export class JourneyClient extends HttpClient {
@@ -59,7 +60,14 @@ export class JourneyClient extends HttpClient {
     await this.request({
       url: `/journey/external/drafts/${draftId}`,
       method: "DELETE",
-
     });
+  }
+
+  async startFlow(draftId: string): Promise<JourneyStartFlowResponse> {
+    const response = await this.request<JourneyStartFlowResponse>({
+      url: `/journey/external/drafts/${draftId}/start`,
+      method: "POST",
+    });
+    return response.data;
   }
 }

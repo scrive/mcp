@@ -7,6 +7,7 @@ import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-fl
 import { deleteFlowDraftConfig, deleteFlowDraftHandler } from "./tools/delete-flow-draft.js";
 import { getFlowDraftConfig, getFlowDraftHandler } from "./tools/get-flow-draft.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
+import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
@@ -93,6 +94,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "delete_flow_draft",
     deleteFlowDraftConfig,
     deleteFlowDraftHandler(journeyClient),
+  );
+
+  server.registerTool(
+    "start_flow",
+    startFlowConfig,
+    startFlowHandler(journeyClient),
   );
 
   server.registerTool(

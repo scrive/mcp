@@ -1,5 +1,9 @@
 import { HttpClient, type HttpClientConfig } from "../base-client.js";
-import type { JourneyDraft } from "./types.js";
+import type {
+  JourneyDocument,
+  JourneyDraft,
+  JourneyListDraftsResponse,
+} from "./types.js";
 
 export class JourneyClient extends HttpClient {
   constructor(config: HttpClientConfig) {
@@ -17,17 +21,28 @@ export class JourneyClient extends HttpClient {
     return response.data;
   }
 
-  async addDocumentToDraft(
-    draftId: string,
-    name: string,
-    pdf: string,
-  ): Promise<JourneyMutationResponse> {
-    const response = await this.request<JourneyMutationResponse>({
+  async addDocumentToDraft(draftId: string, name: string, pdf: string): Promise<JourneyDocument> {
+    const response = await this.request<JourneyDocument>({
       url: `/journey/external/drafts/${draftId}/documents`,
       method: "POST",
 
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name, pdf }),
+    });
+    return response.data;
+  }
+
+  async listFlowDrafts(limit: number, page?: string): Promise<JourneyListDraftsResponse> {
+    const params: Record<string, string> = { limit: String(limit) };
+    if (page) {
+      params.page = page;
+    }
+
+    const response = await this.request<JourneyListDraftsResponse>({
+      url: "/journey/external/drafts",
+      method: "GET",
+
+      params,
     });
     return response.data;
   }

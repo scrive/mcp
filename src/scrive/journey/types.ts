@@ -89,6 +89,23 @@ export interface JourneyDraft {
   callback?: unknown;
 }
 
+export interface JourneyListDraft {
+  id: string;
+  process_title: string;
+  created: string;
+  updated: string;
+  author_id: string;
+  folder_id: string;
+}
+
+export interface JourneyListDraftsResponse {
+  navigation: {
+    next_page?: string;
+    previous_page?: string;
+  };
+  results: JourneyListDraft[];
+}
+
 export interface JourneyStartFlowResponse {
   flow_id: string;
 }

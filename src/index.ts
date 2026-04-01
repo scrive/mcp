@@ -1,5 +1,6 @@
 import { runAuth } from "./commands/auth.js";
 import { runStdio } from "./commands/stdio.js";
+import { normalizeDirectories } from "./path-validation.js";
 
 function execName(): string {
   const value = process.argv[1];
@@ -18,12 +19,14 @@ async function main(): Promise<void> {
     return;
   }
 
+  const allowedDirectories = await normalizeDirectories(process.argv.slice(3));
+
   switch (command) {
     case "auth":
       await runAuth();
       return;
     case "stdio":
-      await runStdio();
+      await runStdio(allowedDirectories);
       return;
     default:
       console.error(`unknown command: ${command}`);

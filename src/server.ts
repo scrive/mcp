@@ -1,12 +1,27 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
+import type { DocumentClient } from "./scrive/document/client.js";
+import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
 import { getTimeHandler } from "./tools/get-time.js";
 
-export function createServer(): McpServer {
+export interface ServerDependencies {
+  documentClient: DocumentClient;
+  allowedDirectories: string[];
+}
+
+export function createServer(dependencies: ServerDependencies): McpServer {
   const server = new McpServer({
     name: "scrive-mcp",
     version: "0.1.0",
   });
+
+  const { documentClient, allowedDirectories } = dependencies;
+
+  server.registerTool(
+    "create_document",
+    createDocumentConfig,
+    createDocumentHandler(documentClient, allowedDirectories),
+  );
 
   server.registerTool(
     "get_time",

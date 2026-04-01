@@ -70,4 +70,15 @@ export class JourneyClient extends HttpClient {
     });
     return response.data;
   }
+
+  async updateFlowDraft(draftId: string, updates: Partial<JourneyDraft>): Promise<JourneyDraft> {
+    const response = await this.request<JourneyDraft>({
+      url: `/journey/external/drafts/${draftId}`,
+      method: "PATCH",
+
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+    return response.data;
+  }
 }

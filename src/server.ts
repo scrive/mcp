@@ -3,17 +3,18 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
 import { addDocumentToDraftConfig, addDocumentToDraftHandler } from "./tools/add-document-to-draft.js";
-import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-flow-draft.js";
-import { deleteFlowDraftConfig, deleteFlowDraftHandler } from "./tools/delete-flow-draft.js";
-import { getFlowDraftConfig, getFlowDraftHandler } from "./tools/get-flow-draft.js";
-import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
-import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
+import { addParticipantToDraftConfig, addParticipantToDraftHandler } from "./tools/add-participant-to-draft.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
+import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-flow-draft.js";
+import { deleteFlowDraftConfig, deleteFlowDraftHandler } from "./tools/delete-flow-draft.js";
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
+import { getFlowDraftConfig, getFlowDraftHandler } from "./tools/get-flow-draft.js";
 import { getTimeHandler } from "./tools/get-time.js";
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
+import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
+import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
 import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
 
 export interface ServerDependencies {
@@ -100,6 +101,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "start_flow",
     startFlowConfig,
     startFlowHandler(journeyClient),
+  );
+
+  server.registerTool(
+    "add_participant_to_draft",
+    addParticipantToDraftConfig,
+    addParticipantToDraftHandler(journeyClient),
   );
 
   server.registerTool(

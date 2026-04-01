@@ -6,6 +6,7 @@ import { createDocumentConfig, createDocumentHandler } from "./tools/create-docu
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
 import { getTimeHandler } from "./tools/get-time.js";
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
+import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
 
 export interface ServerDependencies {
   documentClient: DocumentClient;
@@ -42,6 +43,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "add_party",
     addPartyConfig,
     addPartyHandler(documentClient),
+  );
+
+  server.registerTool(
+    "start_signing",
+    startSigningConfig,
+    startSigningHandler(documentClient),
   );
 
   server.registerTool(

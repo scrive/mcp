@@ -53,4 +53,11 @@ export class DocumentClient extends HttpClient {
     });
     return response.data;
   }
+
+  async startSigning(documentId: string): Promise<void> {
+    await this.request({
+      url: `/api/v2/documents/${documentId}/start`,
+      method: "POST",
+    });
+  }
 }

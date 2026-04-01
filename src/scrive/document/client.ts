@@ -1,5 +1,5 @@
 import { HttpClient } from "../base-client.js";
-import type { ScriveDocument } from "./types.js";
+import type { ListDocumentsParams, ListDocumentsResponse, ScriveDocument } from "./types.js";
 
 export class DocumentClient extends HttpClient {
   async createDocument(file: File): Promise<ScriveDocument> {
@@ -10,6 +10,26 @@ export class DocumentClient extends HttpClient {
       url: "/api/v2/documents/new",
       method: "POST",
       body: formData,
+    });
+    return response.data;
+  }
+
+  async listDocuments(params: ListDocumentsParams): Promise<ListDocumentsResponse> {
+    const queryParams: Record<string, string> = {
+      offset: String(params.offset),
+      max: String(params.max),
+    };
+    if (params.filters?.length) {
+      queryParams.filter = JSON.stringify(params.filters);
+    }
+    if (params.sorting?.length) {
+      queryParams.sorting = JSON.stringify(params.sorting);
+    }
+
+    const response = await this.request<ListDocumentsResponse>({
+      url: "/api/v2/documents/list",
+      method: "GET",
+      params: queryParams,
     });
     return response.data;
   }

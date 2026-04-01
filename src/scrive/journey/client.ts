@@ -16,4 +16,19 @@ export class JourneyClient extends HttpClient {
     });
     return response.data;
   }
+
+  async addDocumentToDraft(
+    draftId: string,
+    name: string,
+    pdf: string,
+  ): Promise<JourneyMutationResponse> {
+    const response = await this.request<JourneyMutationResponse>({
+      url: `/journey/external/drafts/${draftId}/documents`,
+      method: "POST",
+
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name, pdf }),
+    });
+    return response.data;
+  }
 }

@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
+import { addDocumentToDraftConfig, addDocumentToDraftHandler } from "./tools/add-document-to-draft.js";
 import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-flow-draft.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
@@ -65,6 +66,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "create_flow_draft",
     createFlowDraftConfig,
     createFlowDraftHandler(journeyClient),
+  );
+
+  server.registerTool(
+    "add_document_to_draft",
+    addDocumentToDraftConfig,
+    addDocumentToDraftHandler(journeyClient, allowedDirectories),
   );
 
   server.registerTool(

@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import type { DocumentClient } from "./scrive/document/client.js";
+import type { JourneyClient } from "./scrive/journey/client.js";
+import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-flow-draft.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
@@ -11,6 +13,7 @@ import { startSigningConfig, startSigningHandler } from "./tools/start-signing.j
 
 export interface ServerDependencies {
   documentClient: DocumentClient;
+  journeyClient: JourneyClient;
   allowedDirectories: string[];
 }
 
@@ -20,7 +23,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     version: "0.1.0",
   });
 
-  const { documentClient, allowedDirectories } = dependencies;
+  const { documentClient, journeyClient, allowedDirectories } = dependencies;
 
   server.registerTool(
     "create_document",
@@ -56,6 +59,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "remind_document",
     remindDocumentConfig,
     remindDocumentHandler(documentClient),
+  );
+
+  server.registerTool(
+    "create_flow_draft",
+    createFlowDraftConfig,
+    createFlowDraftHandler(journeyClient),
   );
 
   server.registerTool(

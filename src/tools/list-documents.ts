@@ -38,7 +38,8 @@ export const listDocumentsConfig = {
         name: z.string(),
         value: z.string(),
       })
-      .optional(),
+      .optional()
+      .transform((tag) => (tag?.name && tag?.value ? tag : undefined)),
     has_tag: z.string().optional(),
     is_author: z.boolean().optional(),
     author_id: z.string().optional(),

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { DocumentClient } from "../src/scrive/document/client.js";
-import { listDocumentsHandler } from "../src/tools/list-documents.js";
+import {
+  buildFilters,
+  listDocumentsConfig,
+  listDocumentsHandler,
+} from "../src/tools/list-documents.js";
 import { fakeFetch } from "./helpers/fake-fetch.js";
 
 describe("listDocumentsHandler", () => {
@@ -44,6 +48,22 @@ describe("listDocumentsHandler", () => {
     const filter = requests[0].url.searchParams.get("filter");
     expect(filter).toBeDefined();
     expect(filter).toContain("pending");
+  });
+
+  it("drops tag filter when name and value are empty strings", async () => {
+    const parsed = listDocumentsConfig.inputSchema.parse({
+      tag: { name: "", value: "" },
+    });
+    expect(parsed.tag).toBeUndefined();
+    expect(buildFilters(parsed)).toEqual([]);
+  });
+
+  it("keeps tag filter when name and value are non-empty", async () => {
+    const parsed = listDocumentsConfig.inputSchema.parse({
+      tag: { name: "project", value: "alpha" },
+    });
+    expect(parsed.tag).toEqual({ name: "project", value: "alpha" });
+    expect(buildFilters(parsed)).toEqual([{ filter_by: "tag", name: "project", value: "alpha" }]);
   });
 
   it("formats response with document summaries", async () => {

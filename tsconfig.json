@@ -4,10 +4,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
-    "outDir": "dist",
-    "rootDir": ".",
+    "noEmit": true,
     "strict": true,
-    "noEmitOnError": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
@@ -15,5 +13,5 @@
     "verbatimModuleSyntax": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "ui/**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

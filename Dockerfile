@@ -9,4 +9,4 @@ RUN pnpm prune --prod
 RUN addgroup --gid 1337 app && adduser --uid 1337 --ingroup app --disabled-password --no-create-home app
 USER 1337:1337
 EXPOSE 8080
-CMD ["node", "dist/src/index.js", "http"]
+CMD ["node", "dist/index.js", "http"]

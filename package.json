@@ -1,13 +1,19 @@
 {
-  "name": "scrive-mcp",
+  "name": "@contractbook/scrive-mcp",
   "version": "0.1.0",
-  "private": true,
+  "bin": {
+    "scrive-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist/index.js"
+  ],
   "type": "module",
   "scripts": {
-    "build": "tsgo -p tsconfig.json && vite build --config ui/vite.config.ts",
-    "build:server": "tsgo -p tsconfig.json",
-    "build:ui": "vite build --config ui/vite.config.ts",
-    "dev": "tsgo -p tsconfig.json --watch",
+    "build": "pnpm run build:ui && pnpm run build:server",
+    "build:server": "vite build",
+    "build:ui": "vite build --config src/ui/vite.config.ts",
+    "check": "tsgo -p tsconfig.json",
+    "dev": "vite build --watch",
     "fmt": "oxfmt",
     "lint": "oxlint",
     "test": "vitest run"

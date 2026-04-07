@@ -29,7 +29,7 @@ pnpm run build
 Run the interactive auth setup:
 
 ```bash
-node dist/src/index.js auth
+node dist/index.js auth
 ```
 
 This prompts for your Scrive server, email, and password, then saves credentials to `~/.config/scrive-mcp/config.json`.

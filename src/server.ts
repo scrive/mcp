@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
-
 import { registerAppResource, registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+import getTimeHtml from "#ui/get-time/app.html?raw";
 
 import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
@@ -113,7 +113,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       {
         uri: getTimeResourceUri,
         mimeType: "text/html;profile=mcp-app",
-        text: await readGetTimeHtml(),
+        text: getTimeHtml,
       },
     ],
   }));
@@ -122,8 +122,3 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 }
 
 const getTimeResourceUri = "ui://get_time/app.html";
-
-async function readGetTimeHtml(): Promise<string> {
-  const filePath = new URL("../ui/get-time/app.html", import.meta.url);
-  return readFile(filePath, "utf8");
-}

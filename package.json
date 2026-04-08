@@ -1,5 +1,5 @@
 {
-  "name": "@contractbook/scrive-mcp",
+  "name": "@scrive/mcp",
   "version": "0.1.0",
   "bin": {
     "scrive-mcp": "./dist/index.js"

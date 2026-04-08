@@ -3,9 +3,14 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "vite";
 
+import pkg from "./package.json" with { type: "json" };
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  define: {
+    __VERSION__: JSON.stringify(pkg.version),
+  },
   build: {
     outDir: "dist",
     emptyOutDir: false,
@@ -25,6 +30,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "#ui": path.join(here, "dist", "ui"),
+    },
+  },
+  test: {
+    alias: {
+      "#ui": path.join(here, "src", "ui"),
     },
   },
 });

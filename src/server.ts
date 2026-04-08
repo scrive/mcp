@@ -35,7 +35,7 @@ export interface ServerDependencies {
 export function createServer(dependencies: ServerDependencies): McpServer {
   const server = new McpServer({
     name: "scrive-mcp",
-    version: "0.1.0",
+    version: __VERSION__,
   });
 
   const { documentClient, journeyClient, allowedDirectories } = dependencies;

@@ -90,7 +90,7 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
   app.options("/mcp", (_req, res) => {
     res.status(204).end();
   });
-  app.get(
+  app.use(
     "/.well-known/oauth-protected-resource",
     metadataHandler({
       resource: config.resourceUrl,

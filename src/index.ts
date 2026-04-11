@@ -24,7 +24,12 @@ async function main(): Promise<void> {
 
   switch (command) {
     case "auth":
-      await runAuth();
+      try {
+        await runAuth();
+      } catch (error) {
+        console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        process.exitCode = 1;
+      }
       return;
     case "stdio":
       await runStdio(allowedDirectories);

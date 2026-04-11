@@ -26,13 +26,13 @@ pnpm run build
 
 ### 3. Configure credentials for stdio mode
 
-Run the interactive auth setup:
+Run the OAuth authorization flow:
 
 ```bash
 node dist/index.js auth
 ```
 
-This prompts for your Scrive server, email, and password, then saves credentials to `~/.config/scrive-mcp/config.json`.
+This prompts for your Scrive server and OAuth client credentials (from your Scrive Integration settings), opens your browser to authorize the application, then saves credentials to `~/.config/scrive-mcp/config.json`.
 
 ## Running
 

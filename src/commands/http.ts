@@ -83,7 +83,7 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
         expiresAt: Date.now() / 1000 + 3600,
       }),
     },
-    resourceMetadataUrl: "/.well-known/oauth-protected-resource",
+    resourceMetadataUrl: new URL("/.well-known/oauth-protected-resource", config.resourceUrl).href,
   });
   const corsMiddleware = createCorsMiddleware(config.corsOrigins);
 

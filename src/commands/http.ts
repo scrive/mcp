@@ -80,6 +80,7 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
         token,
         clientId: "scrive-mcp",
         scopes: config.scopes,
+        expiresAt: Date.now() / 1000 + 3600,
       }),
     },
     resourceMetadataUrl: "/.well-known/oauth-protected-resource",

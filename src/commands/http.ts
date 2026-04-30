@@ -108,7 +108,12 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
     const clientConfig = { baseUrl: config.scriveBaseUrl, authHeader: `Bearer ${token}` };
     const documentClient = new DocumentClient(clientConfig);
     const journeyClient = new JourneyClient(clientConfig);
-    const server = createServer({ documentClient, journeyClient, allowedDirectories });
+    const server = createServer({
+      documentClient,
+      journeyClient,
+      allowedDirectories,
+      isRemote: true,
+    });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

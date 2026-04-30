@@ -1,4 +1,8 @@
+import { registerAppResource, registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+
+import fileUploadHtml from "#ui/file-upload/app.html?raw";
 
 import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
@@ -7,11 +11,19 @@ import {
   addDocumentToDraftHandler,
 } from "./tools/add-document-to-draft.js";
 import {
+  addDocumentToDraftUploadConfig,
+  addDocumentToDraftUploadHandler,
+} from "./tools/add-document-to-draft-upload.js";
+import {
   addParticipantToDraftConfig,
   addParticipantToDraftHandler,
 } from "./tools/add-participant-to-draft.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
+import {
+  createDocumentUploadConfig,
+  createDocumentUploadHandler,
+} from "./tools/create-document-upload.js";
 import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-flow-draft.js";
 import { deleteFlowDraftConfig, deleteFlowDraftHandler } from "./tools/delete-flow-draft.js";
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
@@ -27,6 +39,7 @@ export interface ServerDependencies {
   documentClient: DocumentClient;
   journeyClient: JourneyClient;
   allowedDirectories: string[];
+  isRemote: boolean;
 }
 
 export function createServer(dependencies: ServerDependencies): McpServer {
@@ -35,13 +48,88 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     version: __VERSION__,
   });
 
-  const { documentClient, journeyClient, allowedDirectories } = dependencies;
+  const { documentClient, journeyClient, allowedDirectories, isRemote } = dependencies;
 
-  server.registerTool(
-    "create_document",
-    createDocumentConfig,
-    createDocumentHandler(documentClient, allowedDirectories),
-  );
+  if (isRemote) {
+    registerAppTool(
+      server,
+      "create_document",
+      {
+        description:
+          "Uploads a PDF file to Scrive as a new document. Opens a file picker for the user to select the PDF.",
+        _meta: { ui: { resourceUri: fileUploadResourceUri } },
+      },
+      async () => ({
+        content: [
+          { type: "text" as const, text: "Please select a PDF file using the file picker." },
+        ],
+      }),
+    );
+
+    registerAppTool(
+      server,
+      "add_document_to_draft",
+      {
+        description:
+          "Adds one or more PDF documents to an existing Journey flow draft. Opens a file picker for the user to select PDFs.",
+        inputSchema: {
+          draft_id: z.string(),
+          name: z.string().optional(),
+        },
+        _meta: { ui: { resourceUri: fileUploadResourceUri } },
+      },
+      async ({ draft_id, name }: { draft_id: string; name?: string }) => ({
+        content: [
+          {
+            type: "text" as const,
+            text: `Please select one or more PDF files to add to draft ${draft_id}${name ? ` as "${name}"` : ""}.`,
+          },
+        ],
+      }),
+    );
+
+    registerAppTool(
+      server,
+      "_create_document_upload",
+      {
+        ...createDocumentUploadConfig,
+        _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
+      },
+      createDocumentUploadHandler(documentClient),
+    );
+
+    registerAppTool(
+      server,
+      "_add_document_to_draft_upload",
+      {
+        ...addDocumentToDraftUploadConfig,
+        _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
+      },
+      addDocumentToDraftUploadHandler(journeyClient),
+    );
+
+    registerAppResource(server, "file_upload_ui", fileUploadResourceUri, {}, async () => ({
+      contents: [
+        {
+          uri: fileUploadResourceUri,
+          mimeType: "text/html;profile=mcp-app" as const,
+          text: fileUploadHtml,
+        },
+      ],
+    }));
+  } else {
+    server.registerTool(
+      "create_document",
+      createDocumentConfig,
+      createDocumentHandler(documentClient, allowedDirectories),
+    );
+
+    server.registerTool(
+      "add_document_to_draft",
+      addDocumentToDraftConfig,
+      addDocumentToDraftHandler(journeyClient, allowedDirectories),
+    );
+  }
 
   server.registerTool("list_documents", listDocumentsConfig, listDocumentsHandler(documentClient));
 
@@ -61,12 +149,6 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "create_flow_draft",
     createFlowDraftConfig,
     createFlowDraftHandler(journeyClient),
-  );
-
-  server.registerTool(
-    "add_document_to_draft",
-    addDocumentToDraftConfig,
-    addDocumentToDraftHandler(journeyClient, allowedDirectories),
   );
 
   server.registerTool(
@@ -93,3 +175,5 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 
   return server;
 }
+
+const fileUploadResourceUri = "ui://file_upload/app.html";

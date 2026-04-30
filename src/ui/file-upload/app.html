@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload PDF</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --surface: #f4f1e8;
+        --panel: #fff8ec;
+        --ink: #1d1a15;
+        --accent: #c45f31;
+        --accent-strong: #9f451e;
+        --shadow: rgba(55, 35, 18, 0.15);
+        --muted: #8a8178;
+        --success: #2d7a3a;
+        --danger: #c44131;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(196, 95, 49, 0.18), transparent 30%),
+          linear-gradient(180deg, #f7f0e4, var(--surface));
+        color: var(--ink);
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+      }
+
+      .card {
+        width: min(28rem, calc(100vw - 2rem));
+        padding: 2rem;
+        border-radius: 1.5rem;
+        background: var(--panel);
+        box-shadow: 0 24px 60px var(--shadow);
+      }
+
+      h1 {
+        margin: 0 0 0.75rem;
+        font-size: clamp(1.6rem, 4vw, 2rem);
+      }
+
+      .drop-zone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 2.5rem 1.5rem;
+        border: 2px dashed var(--muted);
+        border-radius: 1rem;
+        cursor: pointer;
+        transition:
+          border-color 150ms ease,
+          background 150ms ease;
+      }
+
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: var(--accent);
+        background: rgba(196, 95, 49, 0.06);
+      }
+
+      .drop-zone p {
+        margin: 0;
+        text-align: center;
+        line-height: 1.5;
+      }
+
+      .drop-zone .hint {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      #status {
+        margin-top: 1.25rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        max-height: 10rem;
+        overflow-y: auto;
+        display: none;
+      }
+
+      #status.visible {
+        display: block;
+      }
+
+      #status.uploading {
+        background: rgba(29, 26, 21, 0.06);
+        color: var(--ink);
+      }
+
+      #status.success {
+        background: rgba(45, 122, 58, 0.1);
+        color: var(--success);
+      }
+
+      #status.error {
+        background: rgba(196, 65, 49, 0.1);
+        color: var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Upload PDF</h1>
+      <div id="drop-zone" class="drop-zone">
+        <p id="drop-label">Drag and drop a PDF here</p>
+        <p class="hint">or click to browse</p>
+      </div>
+      <input id="file-input" type="file" accept=".pdf,application/pdf" />
+      <div id="status"></div>
+    </main>
+    <script type="module" src="./src/app.ts"></script>
+  </body>
+</html>

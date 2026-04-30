@@ -17,6 +17,7 @@ export async function runStdio(allowedDirectories: string[]): Promise<void> {
     documentClient,
     journeyClient,
     allowedDirectories,
+    isRemote: false,
   });
   const transport = new StdioServerTransport();
   await server.connect(transport);

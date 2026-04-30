@@ -104,7 +104,9 @@ describe("runAuth", () => {
   });
 
   it("fails early with actionable hint when temporary credentials are rejected", async () => {
-    const { fetchImpl, openImpl, openCalls } = createOAuthMocks({ temporaryCredentialsStatus: 401 });
+    const { fetchImpl, openImpl, openCalls } = createOAuthMocks({
+      temporaryCredentialsStatus: 401,
+    });
 
     // Should report the HTTP status and suggest checking credentials
     await expect(runAuth(testCredentials, fetchImpl, openImpl)).rejects.toThrow(

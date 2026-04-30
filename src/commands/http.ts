@@ -74,6 +74,9 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
 
   // Passthrough: the bearer token is forwarded to the Scrive API as-is.
   // The Scrive API validates the token; no local verification is performed.
+  // expiresAt is a synthetic value to satisfy the middleware's interface — actual
+  // token validity is enforced by the upstream Scrive API. Introspecting via Hydra
+  // here would be redundant since the upstream call introspects the same token again.
   const authMiddleware = requireBearerAuth({
     verifier: {
       verifyAccessToken: async (token) => ({

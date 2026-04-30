@@ -1,7 +1,4 @@
-import { registerAppResource, registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-
-import getTimeHtml from "#ui/get-time/app.html?raw";
 
 import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
@@ -19,7 +16,7 @@ import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-fl
 import { deleteFlowDraftConfig, deleteFlowDraftHandler } from "./tools/delete-flow-draft.js";
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
 import { getFlowDraftConfig, getFlowDraftHandler } from "./tools/get-flow-draft.js";
-import { getTimeHandler } from "./tools/get-time.js";
+
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
@@ -94,31 +91,5 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     addParticipantToDraftHandler(journeyClient),
   );
 
-  registerAppTool(
-    server,
-    "get_time",
-    {
-      description: "Returns the current server time",
-      _meta: {
-        ui: {
-          resourceUri: getTimeResourceUri,
-        },
-      },
-    },
-    getTimeHandler(),
-  );
-
-  registerAppResource(server, "get_time_ui", getTimeResourceUri, {}, async () => ({
-    contents: [
-      {
-        uri: getTimeResourceUri,
-        mimeType: "text/html;profile=mcp-app",
-        text: getTimeHtml,
-      },
-    ],
-  }));
-
   return server;
 }
-
-const getTimeResourceUri = "ui://get_time/app.html";

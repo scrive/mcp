@@ -11,7 +11,7 @@
   "scripts": {
     "build": "pnpm run build:ui && pnpm run build:server",
     "build:server": "vite build",
-    "build:ui": "vite build --config src/ui/vite.config.ts",
+    "build:ui": "UI_APP=file-upload vite build --config src/ui/vite.config.ts",
     "check": "tsgo -p tsconfig.json",
     "dev": "vite build --watch",
     "fmt": "oxfmt",

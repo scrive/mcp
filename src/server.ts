@@ -28,6 +28,7 @@ import { createFlowDraftConfig, createFlowDraftHandler } from "./tools/create-fl
 import { deleteFlowDraftConfig, deleteFlowDraftHandler } from "./tools/delete-flow-draft.js";
 import { getDocumentConfig, getDocumentHandler } from "./tools/get-document.js";
 import { getFlowDraftConfig, getFlowDraftHandler } from "./tools/get-flow-draft.js";
+import { getUsageStatsConfig, getUsageStatsHandler } from "./tools/get-usage-stats.js";
 
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
@@ -144,6 +145,8 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     remindDocumentConfig,
     remindDocumentHandler(documentClient),
   );
+
+  server.registerTool("get_usage_stats", getUsageStatsConfig, getUsageStatsHandler(documentClient));
 
   server.registerTool(
     "create_flow_draft",

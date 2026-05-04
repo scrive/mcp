@@ -1,5 +1,10 @@
 import { HttpClient } from "../base-client.js";
-import type { ListDocumentsParams, ListDocumentsResponse, ScriveDocument } from "./types.js";
+import type {
+  ListDocumentsParams,
+  ListDocumentsResponse,
+  ScriveDocument,
+  UsageStatsParams,
+} from "./types.js";
 
 export class DocumentClient extends HttpClient {
   async createDocument(file: File): Promise<ScriveDocument> {
@@ -66,5 +71,21 @@ export class DocumentClient extends HttpClient {
       url: `/api/v2/documents/${documentId}/remind`,
       method: "POST",
     });
+  }
+
+  async getUsageStats(params: UsageStatsParams): Promise<unknown> {
+    const { period, ...rest } = params;
+    const queryParams = Object.fromEntries(
+      Object.entries(rest)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, String(v)]),
+    );
+
+    const response = await this.request<unknown>({
+      url: `/api/v2/usagestats/${period}`,
+      method: "GET",
+      params: queryParams,
+    });
+    return response.data;
   }
 }

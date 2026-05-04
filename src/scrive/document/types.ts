@@ -291,3 +291,15 @@ export interface ListDocumentsResponse {
   total_matching: number;
   documents: ScriveDocument[];
 }
+
+export type UsageStatsPeriod = "days" | "months";
+
+export interface UsageStatsParams {
+  period: UsageStatsPeriod;
+  userGroupID?: string;
+  withCompany?: boolean;
+  recursive?: boolean;
+  includeZeroRecords?: boolean;
+  fromDate?: string;
+  toDate?: string;
+}

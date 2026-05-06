@@ -1,4 +1,5 @@
 import { realpath } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 /**
@@ -67,10 +68,17 @@ function isWithinAllowedDirectories(absolutePath: string, allowedDirectories: st
  * Normalizes raw directory arguments into resolved, absolute paths.
  * Resolves symlinks when the directory exists.
  */
+function expandHome(filepath: string): string {
+  if (filepath === "~" || filepath.startsWith("~/")) {
+    return path.join(os.homedir(), filepath.slice(1));
+  }
+  return filepath;
+}
+
 export async function normalizeDirectories(directories: string[]): Promise<string[]> {
   const results = await Promise.all(
     directories.map(async (directory) => {
-      const absolute = path.resolve(directory);
+      const absolute = path.resolve(expandHome(directory));
       const normalized = path.normalize(absolute);
       try {
         const resolved = await realpath(absolute);

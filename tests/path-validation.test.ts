@@ -95,4 +95,19 @@ describe("normalizeDirectories", () => {
     const result = await normalizeDirectories(["/nonexistent/path/12345"]);
     expect(result).toEqual(["/nonexistent/path/12345"]);
   });
+
+  it("expands ~ to the home directory", async () => {
+    const result = await normalizeDirectories(["~"]);
+    expect(result).toContain(os.homedir());
+  });
+
+  it("expands ~/... paths to absolute home-relative paths", async () => {
+    const result = await normalizeDirectories(["~/Documents"]);
+    expect(result).toContain(path.join(os.homedir(), "Documents"));
+  });
+
+  it("does not expand a path that merely contains ~ but does not start with ~/", async () => {
+    const result = await normalizeDirectories(["/some/~path"]);
+    expect(result).toContain("/some/~path");
+  });
 });

@@ -8,6 +8,13 @@ export const createFlowDraftConfig = {
   inputSchema: z.object({
     process_title: z.string(),
   }),
+  annotations: {
+    title: "Create Flow Draft",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface CreateFlowDraftArgs {

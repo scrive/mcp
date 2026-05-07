@@ -7,6 +7,13 @@ export const startSigningConfig = {
   inputSchema: z.object({
     document_id: z.string(),
   }),
+  annotations: {
+    title: "Start Signing Process",
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface StartSigningArgs {

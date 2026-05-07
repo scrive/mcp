@@ -7,6 +7,13 @@ export const startFlowConfig = {
   inputSchema: z.object({
     draft_id: z.string(),
   }),
+  annotations: {
+    title: "Start Flow",
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface StartFlowArgs {

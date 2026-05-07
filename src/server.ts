@@ -58,6 +58,13 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       {
         description:
           "Uploads a PDF file to Scrive as a new document. Opens a file picker for the user to select the PDF.",
+        annotations: {
+          title: "Create Document from File",
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: true,
+        },
         _meta: { ui: { resourceUri: fileUploadResourceUri } },
       },
       async () => ({
@@ -76,6 +83,13 @@ export function createServer(dependencies: ServerDependencies): McpServer {
         inputSchema: {
           draft_id: z.string(),
           name: z.string().optional(),
+        },
+        annotations: {
+          title: "Add Document to Flow Draft",
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: true,
         },
         _meta: { ui: { resourceUri: fileUploadResourceUri } },
       },

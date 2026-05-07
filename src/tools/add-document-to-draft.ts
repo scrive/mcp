@@ -13,6 +13,13 @@ export const addDocumentToDraftConfig = {
     draft_id: z.string(),
     name: z.string().optional(),
   }),
+  annotations: {
+    title: "Add Document to Flow Draft",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface AddDocumentToDraftArgs {

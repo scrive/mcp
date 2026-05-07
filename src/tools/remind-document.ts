@@ -7,6 +7,13 @@ export const remindDocumentConfig = {
   inputSchema: z.object({
     document_id: z.string(),
   }),
+  annotations: {
+    title: "Send Document Reminder",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface RemindDocumentArgs {

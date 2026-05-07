@@ -8,6 +8,11 @@ export const listFlowDraftsConfig = {
     limit: z.number().optional(),
     page: z.string().optional(),
   }),
+  annotations: {
+    title: "List Flow Drafts",
+    readOnlyHint: true,
+    openWorldHint: true,
+  },
 };
 
 export interface ListFlowDraftsArgs {

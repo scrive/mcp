@@ -11,6 +11,13 @@ export const addPartyConfig = {
     email: z.string(),
     role: z.enum(["signing_party", "viewer", "approver"]),
   }),
+  annotations: {
+    title: "Add Party to Document",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface AddPartyArgs {

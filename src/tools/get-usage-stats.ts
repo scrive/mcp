@@ -24,6 +24,11 @@ export const getUsageStatsConfig = {
       .optional()
       .describe("Upper date bound in ISO 8601 format (YYYY-MM-DD or YYYY-MM)"),
   }),
+  annotations: {
+    title: "Get Usage Statistics",
+    readOnlyHint: true,
+    openWorldHint: true,
+  },
 };
 
 export type GetUsageStatsArgs = UsageStatsParams;

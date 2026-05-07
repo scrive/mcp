@@ -7,6 +7,13 @@ export const deleteFlowDraftConfig = {
   inputSchema: z.object({
     draft_id: z.string(),
   }),
+  annotations: {
+    title: "Delete Flow Draft",
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface DeleteFlowDraftArgs {

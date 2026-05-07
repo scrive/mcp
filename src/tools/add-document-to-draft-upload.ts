@@ -11,6 +11,13 @@ export const addDocumentToDraftUploadConfig = {
     file_name: z.string().describe("Original filename of the PDF"),
     file_data: z.string().describe("Base64-encoded PDF content"),
   },
+  annotations: {
+    title: "Upload Document to Draft (internal)",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface AddDocumentToDraftUploadArgs {

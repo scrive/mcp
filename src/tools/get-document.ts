@@ -7,6 +7,11 @@ export const getDocumentConfig = {
   inputSchema: z.object({
     document_id: z.string().min(1),
   }),
+  annotations: {
+    title: "Get Document",
+    readOnlyHint: true,
+    openWorldHint: true,
+  },
 };
 
 export interface GetDocumentArgs {

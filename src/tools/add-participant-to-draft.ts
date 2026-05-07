@@ -26,6 +26,13 @@ export const addParticipantToDraftConfig = {
       .enum(["email", "sms", "email_and_sms", "none", "kivra", "eboks", "eboks_private"])
       .optional(),
   }),
+  annotations: {
+    title: "Add Participant to Flow Draft",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface AddParticipantToDraftArgs {

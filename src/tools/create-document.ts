@@ -11,6 +11,13 @@ export const createDocumentConfig = {
   inputSchema: {
     file_path: z.string().describe("ABSOLUTE path to the PDF file"),
   },
+  annotations: {
+    title: "Create Document from File",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
 };
 
 export interface CreateDocumentArgs {

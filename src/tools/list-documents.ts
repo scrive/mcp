@@ -59,6 +59,11 @@ export const listDocumentsConfig = {
       )
       .optional(),
   }),
+  annotations: {
+    title: "List Documents",
+    readOnlyHint: true,
+    openWorldHint: true,
+  },
 };
 
 export interface MtimeFilter {

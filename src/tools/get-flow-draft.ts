@@ -7,6 +7,11 @@ export const getFlowDraftConfig = {
   inputSchema: z.object({
     draft_id: z.string(),
   }),
+  annotations: {
+    title: "Get Flow Draft",
+    readOnlyHint: true,
+    openWorldHint: true,
+  },
 };
 
 export interface GetFlowDraftArgs {

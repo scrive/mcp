@@ -1,0 +1,14 @@
+title = 'scrive-mcp'
+theme = 'hugo-book'
+
+# Disable warnings about taxonomies we don't use.
+disableKinds = ['taxonomy', 'term']
+
+[params]
+BookTheme = 'auto'
+BookToC = true
+BookSearch = true
+BookSection = '*'
+
+[markup.goldmark.renderer]
+unsafe = true

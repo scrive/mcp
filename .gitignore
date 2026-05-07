@@ -3,3 +3,11 @@ dist/
 coverage/
 .DS_Store
 *.log
+
+# Local docs preview (Hugo)
+docs/themes/
+docs/content/_index.md
+docs/content/license.md
+docs/public/
+docs/resources/
+.hugo_build.lock

@@ -32,7 +32,11 @@ Run the OAuth authorization flow:
 node dist/index.js auth
 ```
 
-This prompts for your Scrive server and OAuth client credentials (from your Scrive Integration settings), opens your browser to authorize the application, then saves credentials to `~/.config/scrive-mcp/config.json`.
+This prompts for your Scrive server and OAuth client credentials (from your Scrive Integration settings), opens your browser to authorize the application, then saves credentials to a platform-native location:
+
+- macOS: `~/Library/Application Support/scrive-mcp/config.json`
+- Linux: `$XDG_CONFIG_HOME/scrive-mcp/config.json`, defaulting to `~/.config/scrive-mcp/config.json`
+- Windows: `%APPDATA%\scrive-mcp\config.json`
 
 ## Running
 
@@ -41,8 +45,10 @@ This prompts for your Scrive server and OAuth client credentials (from your Scri
 For local MCP clients:
 
 ```bash
-node dist/src/index.js stdio
+node dist/index.js stdio ~/Documents ~/Downloads
 ```
+
+Arguments after `stdio` are directories the server is allowed to read PDFs from. Tools that take a local path (such as `create_document`) reject paths outside this list. `~` is expanded.
 
 ### HTTP transport
 
@@ -56,7 +62,7 @@ export RESOURCE_URL=https://your-host.example.com/mcp
 export SCOPES=full
 export ALLOWED_CORS_ORIGINS=https://claude.ai,https://chatgpt.com
 
-node dist/src/index.js http
+node dist/index.js http
 ```
 
 Set `ALLOWED_CORS_ORIGINS` to the exact web client origins that should be allowed to call `/mcp`. Wildcards such as `*` are not supported by the current HTTP transport.
@@ -74,22 +80,22 @@ export DISABLE_DNS_REBINDING_PROTECTION=true
 
 ## Available MCP Tools
 
-| Tool                       | Description                                                         |
-| -------------------------- | ------------------------------------------------------------------- |
-| `create_document`          | Upload a PDF file from an absolute local path.                      |
-| `list_documents`           | List documents with filtering and sorting options.                  |
-| `get_document`             | Retrieve a document preview or full JSON payload.                   |
-| `add_party`                | Add a signing party to an existing document.                        |
-| `start_signing`            | Start the signing flow for a document.                              |
-| `remind_document`          | Send reminders to signatories who have not signed yet.              |
-| `create_flow_draft`        | Create a new Journey flow draft.                                    |
-| `add_document_to_draft`    | Add a PDF document to an existing Journey draft.                    |
-| `list_flow_drafts`         | List Journey flow drafts.                                           |
-| `get_flow_draft`           | Retrieve a Journey flow draft.                                      |
-| `delete_flow_draft`        | Delete a Journey flow draft.                                        |
-| `start_flow`               | Start a Journey flow draft.                                         |
-| `add_participant_to_draft` | Add a participant to a Journey draft and regenerate steps.          |
-| `get_time`                 | Return the current UTC time and render the bundled MCP App example. |
+| Tool                       | Description                                                |
+| -------------------------- | ---------------------------------------------------------- |
+| `create_document`          | Upload a PDF file from an absolute local path.             |
+| `list_documents`           | List documents with filtering and sorting options.         |
+| `get_document`             | Retrieve a document's full JSON representation.            |
+| `add_party`                | Add a signing party to an existing document.               |
+| `start_signing`            | Start the signing flow for a document.                     |
+| `remind_document`          | Send reminders to signatories who have not signed yet.     |
+| `get_usage_stats`          | Retrieve daily or monthly Scrive usage statistics.         |
+| `create_flow_draft`        | Create a new Journey flow draft.                           |
+| `add_document_to_draft`    | Add a PDF document to an existing Journey draft.           |
+| `list_flow_drafts`         | List Journey flow drafts.                                  |
+| `get_flow_draft`           | Retrieve a Journey flow draft.                             |
+| `delete_flow_draft`        | Delete a Journey flow draft.                               |
+| `start_flow`               | Start a Journey flow draft.                                |
+| `add_participant_to_draft` | Add a participant to a Journey draft and regenerate steps. |
 
 ## Testing
 
@@ -127,5 +133,18 @@ src/scrive/      Scrive API clients
 src/tools/       MCP tool implementations
 src/server.ts    MCP server setup and tool/resource registration
 tests/           Vitest coverage for config and tool behavior
-ui/              Vite-based MCP App example
+src/ui/          Vite-based MCP App example (file-upload UI for remote mode)
 ```
+
+## Previewing the docs
+
+The docs site lives under `docs/` and is built with [Hugo](https://gohugo.io/) using the [hugo-book](https://github.com/alex-shpak/hugo-book) theme. CI builds and deploys it to GitHub Pages on every push to `main`.
+
+To preview docs locally, install Hugo and run the script:
+
+```bash
+brew install hugo                # macOS — use scoop / winget / apt as appropriate
+./scripts/preview-docs.sh
+```
+
+The script fetches the theme on first run, stages `README.md` and `LICENSE` into the site, and starts Hugo's dev server at <http://localhost:1313/> with live reload. All generated files (theme, staged content, build output) are gitignored.

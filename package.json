@@ -1,6 +1,25 @@
 {
   "name": "@scrive/mcp",
   "version": "0.1.0",
+  "description": "Model Context Protocol server that integrates with Scrive for document automation and e-signing.",
+  "keywords": [
+    "ai",
+    "documents",
+    "e-signing",
+    "llm",
+    "mcp",
+    "model-context-protocol",
+    "scrive"
+  ],
+  "homepage": "https://github.com/scrive/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/scrive/mcp/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scrive/mcp.git"
+  },
   "bin": {
     "scrive-mcp": "./dist/index.js"
   },

@@ -14,8 +14,27 @@ export interface Config {
   auth: AuthCredentials;
 }
 
+export function resolveConfigPath(
+  platform: NodeJS.Platform,
+  homeDir: string,
+  env: NodeJS.ProcessEnv,
+): string {
+  if (platform === "win32") {
+    const base = env.APPDATA && env.APPDATA.length > 0 ? env.APPDATA : homeDir;
+    return path.join(base, "scrive-mcp", "config.json");
+  }
+
+  if (platform === "darwin") {
+    return path.join(homeDir, "Library", "Application Support", "scrive-mcp", "config.json");
+  }
+
+  const xdg = env.XDG_CONFIG_HOME && env.XDG_CONFIG_HOME.length > 0 ? env.XDG_CONFIG_HOME : null;
+  const base = xdg ?? path.join(homeDir, ".config");
+  return path.join(base, "scrive-mcp", "config.json");
+}
+
 export function configPath(): string {
-  return path.join(os.homedir(), ".config", "scrive-mcp", "config.json");
+  return resolveConfigPath(process.platform, os.homedir(), process.env);
 }
 
 export async function writeConfig(config: Config): Promise<void> {

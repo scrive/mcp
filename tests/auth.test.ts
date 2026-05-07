@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { runAuth } from "../src/commands/auth.js";
+import { configPath } from "../src/config.js";
 
 const testCredentials = {
   server: "scrive.example.com",
@@ -187,8 +188,7 @@ describe("runAuth", () => {
     expect(tokenParams.oauth_signature).toBe("test-client-secret&temp-secret");
 
     // Step 4: Save config with all credentials
-    const configPath = path.join(process.env.HOME!, ".config", "scrive-mcp", "config.json");
-    const raw = await readFile(configPath, "utf8");
+    const raw = await readFile(configPath(), "utf8");
     const config = JSON.parse(raw);
 
     expect(config).toEqual({

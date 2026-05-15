@@ -125,6 +125,18 @@ docker run -p 8080:8080 \
   scrive-mcp
 ```
 
+## Security
+
+Scrive takes security seriously. If you believe you have found a security issue in scrive-mcp, please report it privately to security@scrive.com rather than opening a public issue or pull request.
+
+When reporting, please include:
+
+- A description of the issue and its potential impact.
+- Steps to reproduce, along with any proof-of-concept code, logs, or screenshots.
+- The affected version or commit, and any relevant configuration.
+
+We will acknowledge your report, investigate, and keep you informed as we work on a fix. Please give us reasonable time to address the issue before any public disclosure.
+
 ## Project Structure
 
 ```text

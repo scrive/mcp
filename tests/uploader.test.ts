@@ -16,7 +16,7 @@ function makeDOM() {
 
 function makeFakeApp() {
   return {
-    sendMessage: vi.fn().mockResolvedValue(undefined),
+    updateModelContext: vi.fn().mockResolvedValue(undefined),
   } as unknown as Parameters<typeof createUploader>[0];
 }
 
@@ -76,8 +76,7 @@ describe("createUploader", () => {
     expect(dom.statusEl.textContent).toBe("Created with ID: doc-1");
     expect(dom.statusEl.classList.contains("visible")).toBe(true);
     expect(dom.statusEl.classList.contains("success")).toBe(true);
-    expect(app.sendMessage).toHaveBeenCalledWith({
-      role: "user",
+    expect(app.updateModelContext).toHaveBeenCalledWith({
       content: [{ type: "text", text: "Created with ID: doc-1" }],
     });
   });
@@ -121,7 +120,7 @@ describe("createUploader", () => {
     ]);
 
     expect(uploadFn).toHaveBeenCalledTimes(1);
-    const sentText = (app.sendMessage as Mock).mock.calls[0][0].content[0].text as string;
+    const sentText = (app.updateModelContext as Mock).mock.calls[0][0].content[0].text as string;
     expect(sentText).toContain("bad.txt: not a PDF file");
     expect(sentText).toContain("Done");
   });

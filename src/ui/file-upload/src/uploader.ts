@@ -101,8 +101,7 @@ export function createUploader(
         hasFailures ? "error" : "success",
       );
 
-      await app.sendMessage({
-        role: "user",
+      await app.updateModelContext({
         content: [{ type: "text", text: summary }],
       });
     } finally {

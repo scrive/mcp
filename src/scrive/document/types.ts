@@ -110,7 +110,7 @@ export type DocumentFilter =
   | { filter_by: "status"; statuses: DocumentStatus[] }
   | { filter_by: "mtime"; start_time?: string; end_time?: string }
   | { filter_by: "tag"; name: string; value: string }
-  | { has_tag: "tag"; name: string }
+  | { filter_by: "has_tag"; name: string }
   | { filter_by: "is_author" }
   | { filter_by: "author"; user_id: string }
   | { filter_by: "user_can_sign"; user_id: string }

@@ -146,7 +146,7 @@ export function buildFilters(args: ListDocumentsArgs): DocumentFilter[] {
     filters.push({ filter_by: "tag", name: args.tag.name, value: args.tag.value });
   }
   if (args.has_tag) {
-    filters.push({ has_tag: "tag", name: args.has_tag });
+    filters.push({ filter_by: "has_tag", name: args.has_tag });
   }
   if (args.is_author) {
     filters.push({ filter_by: "is_author" });

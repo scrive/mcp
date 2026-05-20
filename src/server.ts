@@ -1,4 +1,9 @@
-import { registerAppResource, registerAppTool } from "@modelcontextprotocol/ext-apps/server";
+import {
+  getUiCapability,
+  registerAppResource,
+  registerAppTool,
+  RESOURCE_MIME_TYPE,
+} from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
@@ -51,10 +56,28 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 
   const { documentClient, journeyClient, allowedDirectories, isRemote } = dependencies;
 
-  if (isRemote) {
+  if (!isRemote) {
+    server.registerTool(
+      "create_document",
+      createDocumentConfig,
+      createDocumentHandler(documentClient, allowedDirectories),
+    );
+
+    server.registerTool(
+      "add_document_to_draft",
+      addDocumentToDraftConfig,
+      addDocumentToDraftHandler(journeyClient, allowedDirectories),
+    );
+  }
+
+  const registerPickerTools = () => {
+    // When path-based tools occupy the base names (stdio mode), the picker
+    // tools take a suffixed name so both flavors can coexist.
+    const pickerName = (base: string) => (isRemote ? base : `${base}_picker`);
+
     registerAppTool(
       server,
-      "create_document",
+      pickerName("create_document"),
       {
         description:
           "Uploads a PDF file to Scrive as a new document. Opens a file picker for the user to select the PDF.",
@@ -76,7 +99,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 
     registerAppTool(
       server,
-      "add_document_to_draft",
+      pickerName("add_document_to_draft"),
       {
         description:
           "Adds one or more PDF documents to an existing Journey flow draft. Opens a file picker for the user to select PDFs.",
@@ -123,28 +146,27 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       addDocumentToDraftUploadHandler(journeyClient),
     );
 
-    registerAppResource(server, "file_upload_ui", fileUploadResourceUri, {}, async () => ({
-      contents: [
-        {
-          uri: fileUploadResourceUri,
-          mimeType: "text/html;profile=mcp-app" as const,
-          text: fileUploadHtml,
-        },
-      ],
-    }));
-  } else {
-    server.registerTool(
-      "create_document",
-      createDocumentConfig,
-      createDocumentHandler(documentClient, allowedDirectories),
-    );
+  };
 
-    server.registerTool(
-      "add_document_to_draft",
-      addDocumentToDraftConfig,
-      addDocumentToDraftHandler(journeyClient, allowedDirectories),
-    );
-  }
+  // Register the UI resource eagerly so the SDK installs the resource request
+  // handlers before the transport connects — Server.registerCapabilities throws
+  // post-connect, which swallows any later registerResource() call.
+  registerAppResource(server, "file_upload_ui", fileUploadResourceUri, {}, async () => ({
+    contents: [
+      {
+        uri: fileUploadResourceUri,
+        mimeType: RESOURCE_MIME_TYPE,
+        text: fileUploadHtml,
+      },
+    ],
+  }));
+
+  server.server.oninitialized = () => {
+    const uiCap = getUiCapability(server.server.getClientCapabilities());
+    if (uiCap?.mimeTypes?.includes(RESOURCE_MIME_TYPE)) {
+      registerPickerTools();
+    }
+  };
 
   server.registerTool("list_documents", listDocumentsConfig, listDocumentsHandler(documentClient));
 

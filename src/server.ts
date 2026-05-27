@@ -145,7 +145,6 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       },
       addDocumentToDraftUploadHandler(journeyClient),
     );
-
   };
 
   // Register the UI resource eagerly so the SDK installs the resource request

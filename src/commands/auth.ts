@@ -4,6 +4,7 @@ import { stdin as input, stderr as output } from "node:process";
 import readline from "node:readline/promises";
 
 import { writeConfig } from "../config.js";
+import { renderCallbackPage } from "../ui/oauth-callback/page.js";
 
 interface OAuthCredentials {
   server: string;
@@ -133,16 +134,14 @@ function waitForCallback(server: http.Server, signal: AbortSignal): Promise<Call
       const verifier = url.searchParams.get("oauth_verifier");
 
       if (!token || !verifier) {
-        response.writeHead(400, { "content-type": "text/html" });
-        response.end("<html><body><p>Authorization was denied.</p></body></html>");
+        response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
+        response.end(renderCallbackPage("denied"));
         reject(new Error("authorization was denied by the user"));
         return;
       }
 
-      response.writeHead(200, { "content-type": "text/html" });
-      response.end(
-        "<html><body><p>Authorization successful. You can close this tab.</p></body></html>",
-      );
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(renderCallbackPage("success"));
       resolve({ token, verifier });
     });
   });

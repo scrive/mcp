@@ -170,6 +170,49 @@ describe("createUploader", () => {
     await firstUpload;
   });
 
+  it("locks after a successful upload and ignores further interactions", async () => {
+    const uploadFn = vi.fn().mockResolvedValue({
+      fileName: "a.pdf",
+      success: true,
+      message: "Done a.pdf",
+    });
+
+    const uploader = createUploader(app, dom.dropZone, dom.dropLabel, dom.fileInput, dom.statusEl);
+    uploader.init({ multiple: false, label: "Drop", upload: uploadFn });
+
+    await simulateFileInput(dom.fileInput, [makePdfFile("a.pdf")]);
+
+    expect(uploadFn).toHaveBeenCalledTimes(1);
+    expect(dom.dropZone.classList.contains("done")).toBe(true);
+
+    // Subsequent uploads should be ignored
+    await simulateFileInput(dom.fileInput, [makePdfFile("b.pdf")]);
+    expect(uploadFn).toHaveBeenCalledTimes(1);
+
+    // Click should not open the file picker
+    const clickSpy = vi.spyOn(dom.fileInput, "click");
+    dom.dropZone.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(clickSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not lock when all uploads fail", async () => {
+    const uploadFn = vi
+      .fn()
+      .mockResolvedValueOnce({ fileName: "a.pdf", success: false, message: "Server error" })
+      .mockResolvedValueOnce({ fileName: "b.pdf", success: true, message: "Done b.pdf" });
+
+    const uploader = createUploader(app, dom.dropZone, dom.dropLabel, dom.fileInput, dom.statusEl);
+    uploader.init({ multiple: false, label: "Drop", upload: uploadFn });
+
+    await simulateFileInput(dom.fileInput, [makePdfFile("a.pdf")]);
+    expect(dom.dropZone.classList.contains("done")).toBe(false);
+
+    // A retry after failure should be allowed
+    await simulateFileInput(dom.fileInput, [makePdfFile("b.pdf")]);
+    expect(uploadFn).toHaveBeenCalledTimes(2);
+    expect(dom.dropZone.classList.contains("done")).toBe(true);
+  });
+
   it("limits to first file in single-file drop mode", async () => {
     const uploadFn = vi.fn().mockResolvedValue({
       fileName: "a.pdf",

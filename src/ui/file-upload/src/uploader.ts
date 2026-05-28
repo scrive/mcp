@@ -24,6 +24,7 @@ export function createUploader(
 ) {
   let config: UploaderConfig | null = null;
   let isUploading = false;
+  let isCompleted = false;
 
   function init(cfg: UploaderConfig) {
     config = cfg;
@@ -31,13 +32,17 @@ export function createUploader(
     dropLabel.textContent = cfg.label;
   }
 
+  function isLocked(): boolean {
+    return isUploading || isCompleted;
+  }
+
   dropZone.addEventListener("click", () => {
-    if (!isUploading) fileInput.click();
+    if (!isLocked()) fileInput.click();
   });
 
   dropZone.addEventListener("dragover", (event) => {
     event.preventDefault();
-    if (!isUploading) dropZone.classList.add("dragover");
+    if (!isLocked()) dropZone.classList.add("dragover");
   });
 
   dropZone.addEventListener("dragleave", () => {
@@ -47,7 +52,7 @@ export function createUploader(
   dropZone.addEventListener("drop", (event) => {
     event.preventDefault();
     dropZone.classList.remove("dragover");
-    if (isUploading || !config) return;
+    if (isLocked() || !config) return;
     const files = event.dataTransfer?.files;
     if (!files?.length) return;
     const selected = Array.from(files);
@@ -55,7 +60,7 @@ export function createUploader(
   });
 
   fileInput.addEventListener("change", () => {
-    if (isUploading || !config) return;
+    if (isLocked() || !config) return;
     const files = fileInput.files;
     if (files?.length) {
       void processFiles(Array.from(files));
@@ -95,11 +100,17 @@ export function createUploader(
 
       const summary = formatSummary(results);
       const hasFailures = results.some((r) => !r.success);
+      const hasSuccesses = results.some((r) => r.success);
 
       showStatus(
         hasFailures ? summary : files.length === 1 ? summary : "All files uploaded!",
         hasFailures ? "error" : "success",
       );
+
+      if (hasSuccesses) {
+        isCompleted = true;
+        dropZone.classList.add("done");
+      }
 
       await app.updateModelContext({
         content: [{ type: "text", text: summary }],

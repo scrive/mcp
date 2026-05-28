@@ -3,48 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upload PDF</title>
+    <meta name="color-scheme" content="light" />
+    <title>Upload to Scrive</title>
     <style>
       :root {
-        color-scheme: light;
-        --surface: #f4f1e8;
-        --panel: #fff8ec;
-        --ink: #1d1a15;
-        --accent: #c45f31;
-        --accent-strong: #9f451e;
-        --shadow: rgba(55, 35, 18, 0.15);
-        --muted: #8a8178;
-        --success: #2d7a3a;
-        --danger: #c44131;
+        /* Scrive brand tokens — sourced from scrive.com/new */
+        --blue: #1a79cb;
+        --darkblue: #274790;
+        --lavender: #e9f2fa;
+        --black: #27282d;
+        --brand: #3e494b;
+        --grey1: #f2f6f9;
+        --grey2: #d8e1eb;
+        --grey3: #97a0aa;
+        --grey4: #6a7281;
+        --green: #20883e;
+        --red: #e00040;
+        --white: #ffffff;
+
+        --radius-sm: 4px;
+        --radius-md: 8px;
+
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 16px;
+        --space-4: 24px;
+        --space-5: 32px;
+
+        --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+        --shadow-card: 0 1px 2px #00000040, 0 8px 24px #00000033;
+        --shadow-focus: 0 0 0 3px #1a79cb66;
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html,
       body {
         margin: 0;
+        padding: 0;
+      }
+
+      body {
         min-height: 100vh;
         display: grid;
         place-items: center;
-        background:
-          radial-gradient(circle at top, rgba(196, 95, 49, 0.18), transparent 30%),
-          linear-gradient(180deg, #f7f0e4, var(--surface));
-        color: var(--ink);
-        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        background: var(--black);
+        color: var(--black);
+        font-family: var(--font);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
       }
 
       .card {
-        width: min(28rem, calc(100vw - 2rem));
-        padding: 2rem;
-        border-radius: 1.5rem;
-        background: var(--panel);
-        box-shadow: 0 24px 60px var(--shadow);
-      }
-
-      h1 {
-        margin: 0 0 0.75rem;
-        font-size: clamp(1.6rem, 4vw, 2rem);
+        width: min(28rem, calc(100vw - var(--space-3)));
+        background: var(--white);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-card);
+        padding: var(--space-4);
       }
 
       .drop-zone {
@@ -52,35 +71,58 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.75rem;
-        padding: 2.5rem 1.5rem;
-        border: 2px dashed var(--muted);
-        border-radius: 1rem;
+        gap: var(--space-2);
+        padding: var(--space-5) var(--space-3);
+        border: 1px dashed var(--grey2);
+        border-radius: var(--radius-sm);
+        background: var(--white);
         cursor: pointer;
         transition:
-          border-color 150ms ease,
-          background 150ms ease;
+          border-color 120ms ease,
+          background-color 120ms ease,
+          box-shadow 120ms ease;
       }
 
-      .drop-zone:hover,
+      .drop-zone:hover:not(.done),
       .drop-zone.dragover {
-        border-color: var(--accent);
-        background: rgba(196, 95, 49, 0.06);
+        border-color: var(--blue);
+        background: var(--lavender);
+      }
+
+      .drop-zone:focus-visible {
+        outline: none;
+        box-shadow: var(--shadow-focus);
+      }
+
+      .drop-zone .icon {
+        width: 28px;
+        height: 28px;
+        color: var(--grey3);
+        transition: color 120ms ease;
+      }
+
+      .drop-zone:hover:not(.done) .icon,
+      .drop-zone.dragover .icon {
+        color: var(--blue);
+      }
+
+      .drop-zone .label {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--black);
+        text-align: center;
+      }
+
+      .drop-zone .hint {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--grey4);
+        text-align: center;
       }
 
       .drop-zone.done {
         display: none;
-      }
-
-      .drop-zone p {
-        margin: 0;
-        text-align: center;
-        line-height: 1.5;
-      }
-
-      .drop-zone .hint {
-        font-size: 0.9rem;
-        color: var(--muted);
       }
 
       input[type="file"] {
@@ -88,15 +130,16 @@
       }
 
       #status {
-        margin-top: 1.25rem;
-        padding: 0.75rem 1rem;
-        border-radius: 0.75rem;
-        font-size: 0.95rem;
-        line-height: 1.5;
+        margin-top: var(--space-3);
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-sm);
+        font-size: 0.8125rem;
+        line-height: 1.45;
         white-space: pre-wrap;
         max-height: 10rem;
         overflow-y: auto;
         display: none;
+        border: 1px solid transparent;
       }
 
       #status.visible {
@@ -104,30 +147,52 @@
       }
 
       #status.uploading {
-        background: rgba(29, 26, 21, 0.06);
-        color: var(--ink);
+        background: var(--grey1);
+        color: var(--brand);
+        border-color: var(--grey2);
       }
 
       #status.success {
-        background: rgba(45, 122, 58, 0.1);
-        color: var(--success);
+        background: #e8f5ec;
+        color: var(--green);
+        border-color: #c8e6cf;
       }
 
       #status.error {
-        background: rgba(196, 65, 49, 0.1);
-        color: var(--danger);
+        background: #fbe6ec;
+        color: var(--red);
+        border-color: #f4c2d0;
       }
     </style>
   </head>
   <body>
     <main class="card">
-      <h1>Upload PDF</h1>
-      <div id="drop-zone" class="drop-zone">
-        <p id="drop-label">Drag and drop a PDF here</p>
+      <div
+        id="drop-zone"
+        class="drop-zone"
+        tabindex="0"
+        role="button"
+        aria-label="Choose a PDF to upload"
+      >
+        <svg
+          class="icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 15V4" />
+          <path d="m7 9 5-5 5 5" />
+          <path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" />
+        </svg>
+        <p id="drop-label" class="label">Drop a PDF here</p>
         <p class="hint">or click to browse</p>
       </div>
       <input id="file-input" type="file" accept=".pdf,application/pdf" />
-      <div id="status"></div>
+      <div id="status" aria-live="polite"></div>
     </main>
     <script type="module" src="./src/app.ts"></script>
   </body>

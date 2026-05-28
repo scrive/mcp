@@ -84,13 +84,13 @@ app.ontoolinput = (params) => {
     const draftArgs = args as unknown as AddDocumentToDraftArgs;
     uploader.init({
       multiple: true,
-      label: "Drag and drop one or more PDFs here",
+      label: "Drop PDFs here",
       upload: draftUpload(draftArgs.draft_id, draftArgs.name),
     });
   } else {
     uploader.init({
       multiple: false,
-      label: "Drag and drop a PDF here",
+      label: "Drop a PDF here",
       upload: createUpload(),
     });
   }

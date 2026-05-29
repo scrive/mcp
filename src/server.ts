@@ -12,6 +12,7 @@ import fileUploadHtml from "#ui/file-upload/app.html?raw";
 
 import type { DocumentClient } from "./scrive/document/client.js";
 import type { JourneyClient } from "./scrive/journey/client.js";
+import type { RateLimiter } from "./scrive/rate-limiter.js";
 import {
   addDocumentToDraftConfig,
   addDocumentToDraftHandler,
@@ -47,6 +48,8 @@ export interface ServerDependencies {
   journeyClient: JourneyClient;
   allowedDirectories: string[];
   isRemote: boolean;
+  rateLimiter: RateLimiter;
+  rateLimitKey: string;
 }
 
 export function createServer(dependencies: ServerDependencies): McpServer {
@@ -55,19 +58,33 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     version: __VERSION__,
   });
 
-  const { documentClient, journeyClient, allowedDirectories, isRemote } = dependencies;
+  const { documentClient, journeyClient, allowedDirectories, isRemote, rateLimiter, rateLimitKey } =
+    dependencies;
+
+  function withRateLimit<Args extends unknown[], Result>(
+    handler: (...args: Args) => Promise<Result>,
+  ) {
+    return async (...args: Args) => {
+      const retryAfter = rateLimiter.take(rateLimitKey);
+      if (retryAfter) {
+        const text = `Rate limit exceeded — wait ~${retryAfter}s and stop repeating the same call in a tight loop.`;
+        return { isError: true, content: [{ type: "text" as const, text }] };
+      }
+      return handler(...args);
+    };
+  }
 
   if (!isRemote) {
     server.registerTool(
       "create_document",
       createDocumentConfig,
-      createDocumentHandler(documentClient, allowedDirectories),
+      withRateLimit(createDocumentHandler(documentClient, allowedDirectories)),
     );
 
     server.registerTool(
       "add_document_to_draft",
       addDocumentToDraftConfig,
-      addDocumentToDraftHandler(journeyClient, allowedDirectories),
+      withRateLimit(addDocumentToDraftHandler(journeyClient, allowedDirectories)),
     );
   }
 
@@ -134,7 +151,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
         ...createDocumentUploadConfig,
         _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
       },
-      createDocumentUploadHandler(documentClient),
+      withRateLimit(createDocumentUploadHandler(documentClient)),
     );
 
     registerAppTool(
@@ -144,7 +161,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
         ...addDocumentToDraftUploadConfig,
         _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
       },
-      addDocumentToDraftUploadHandler(journeyClient),
+      withRateLimit(addDocumentToDraftUploadHandler(journeyClient)),
     );
   };
 
@@ -167,48 +184,72 @@ export function createServer(dependencies: ServerDependencies): McpServer {
   // tool that responds with an instructional text message.
   registerPickerTools();
 
-  server.registerTool("list_documents", listDocumentsConfig, listDocumentsHandler(documentClient));
+  server.registerTool(
+    "list_documents",
+    listDocumentsConfig,
+    withRateLimit(listDocumentsHandler(documentClient)),
+  );
 
-  server.registerTool("get_document", getDocumentConfig, getDocumentHandler(documentClient));
+  server.registerTool(
+    "get_document",
+    getDocumentConfig,
+    withRateLimit(getDocumentHandler(documentClient)),
+  );
 
-  server.registerTool("add_party", addPartyConfig, addPartyHandler(documentClient));
+  server.registerTool("add_party", addPartyConfig, withRateLimit(addPartyHandler(documentClient)));
 
-  server.registerTool("start_signing", startSigningConfig, startSigningHandler(documentClient));
+  server.registerTool(
+    "start_signing",
+    startSigningConfig,
+    withRateLimit(startSigningHandler(documentClient)),
+  );
 
   server.registerTool(
     "remind_document",
     remindDocumentConfig,
-    remindDocumentHandler(documentClient),
+    withRateLimit(remindDocumentHandler(documentClient)),
   );
 
-  server.registerTool("get_usage_stats", getUsageStatsConfig, getUsageStatsHandler(documentClient));
+  server.registerTool(
+    "get_usage_stats",
+    getUsageStatsConfig,
+    withRateLimit(getUsageStatsHandler(documentClient)),
+  );
 
   server.registerTool(
     "create_flow_draft",
     createFlowDraftConfig,
-    createFlowDraftHandler(journeyClient),
+    withRateLimit(createFlowDraftHandler(journeyClient)),
   );
 
   server.registerTool(
     "list_flow_drafts",
     listFlowDraftsConfig,
-    listFlowDraftsHandler(journeyClient),
+    withRateLimit(listFlowDraftsHandler(journeyClient)),
   );
 
-  server.registerTool("get_flow_draft", getFlowDraftConfig, getFlowDraftHandler(journeyClient));
+  server.registerTool(
+    "get_flow_draft",
+    getFlowDraftConfig,
+    withRateLimit(getFlowDraftHandler(journeyClient)),
+  );
 
   server.registerTool(
     "delete_flow_draft",
     deleteFlowDraftConfig,
-    deleteFlowDraftHandler(journeyClient),
+    withRateLimit(deleteFlowDraftHandler(journeyClient)),
   );
 
-  server.registerTool("start_flow", startFlowConfig, startFlowHandler(journeyClient));
+  server.registerTool(
+    "start_flow",
+    startFlowConfig,
+    withRateLimit(startFlowHandler(journeyClient)),
+  );
 
   server.registerTool(
     "add_participant_to_draft",
     addParticipantToDraftConfig,
-    addParticipantToDraftHandler(journeyClient),
+    withRateLimit(addParticipantToDraftHandler(journeyClient)),
   );
 
   return server;

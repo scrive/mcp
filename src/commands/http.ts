@@ -1,3 +1,4 @@
+import { hash } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 
 import type { RequestHandler } from "express";
@@ -8,6 +9,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 
 import { DocumentClient } from "../scrive/document/client.js";
 import { JourneyClient } from "../scrive/journey/client.js";
+import { RateLimiter } from "../scrive/rate-limiter.js";
 import { createServer } from "../server.js";
 
 function internalError(res: {
@@ -51,6 +53,9 @@ export interface HttpConfig {
   corsOrigins: string[];
   disableDnsRebindingProtection: boolean;
   identifier?: string;
+  rateLimitCallsPerWindow: number;
+  rateLimitWindowSeconds: number;
+  rateLimitMaxKeys: number;
 }
 
 export function readHttpConfig(env: NodeJS.ProcessEnv): HttpConfig {
@@ -63,10 +68,19 @@ export function readHttpConfig(env: NodeJS.ProcessEnv): HttpConfig {
     corsOrigins: parseOrigins(requireEnv("ALLOWED_CORS_ORIGINS", env)),
     disableDnsRebindingProtection: env.DISABLE_DNS_REBINDING_PROTECTION === "true",
     identifier: env.ADDITIONAL_IDENTIFIER,
+    rateLimitCallsPerWindow: Number(env.RATE_LIMIT_CALLS_PER_WINDOW) || 10,
+    rateLimitWindowSeconds: Number(env.RATE_LIMIT_WINDOW_SECONDS) || 20,
+    rateLimitMaxKeys: Number(env.RATE_LIMIT_MAX_KEYS) || 100_000,
   };
 }
 
 export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) {
+  const rateLimiter = new RateLimiter({
+    callsPerWindow: config.rateLimitCallsPerWindow,
+    duration: config.rateLimitWindowSeconds,
+    maxKeys: config.rateLimitMaxKeys,
+  });
+
   const app = createMcpExpressApp({
     host: "0.0.0.0",
     allowedHosts: config.disableDnsRebindingProtection
@@ -119,6 +133,8 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
       journeyClient,
       allowedDirectories,
       isRemote: true,
+      rateLimiter,
+      rateLimitKey: hash("sha256", token),
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

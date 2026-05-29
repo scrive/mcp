@@ -11,6 +11,9 @@ describe("readHttpConfig", () => {
       RESOURCE_URL: "https://example.com/mcp",
       SCOPES: "full",
       ALLOWED_CORS_ORIGINS: "https://chat.example.com, https://claude.example.com",
+      RATE_LIMIT_CALLS_PER_WINDOW: "25",
+      RATE_LIMIT_WINDOW_SECONDS: "60",
+      RATE_LIMIT_MAX_KEYS: "5000",
     });
 
     expect(config.port).toBe(8080);
@@ -18,6 +21,9 @@ describe("readHttpConfig", () => {
     expect(config.corsOrigins).toEqual(["https://chat.example.com", "https://claude.example.com"]);
     expect(config.disableDnsRebindingProtection).toBe(false);
     expect(config.identifier).toBeUndefined();
+    expect(config.rateLimitCallsPerWindow).toBe(25);
+    expect(config.rateLimitWindowSeconds).toBe(60);
+    expect(config.rateLimitMaxKeys).toBe(5000);
   });
 
   it("picks up the additional identifier when set", () => {

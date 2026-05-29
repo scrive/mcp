@@ -1,6 +1,7 @@
 export interface HttpClientConfig {
   baseUrl: string;
   authHeader: string;
+  identifier?: string;
   fetchImpl?: typeof fetch;
 }
 
@@ -37,7 +38,13 @@ export class HttpClient {
 
   constructor(config: HttpClientConfig) {
     this.baseUrl = config.baseUrl;
-    this.headers = { authorization: config.authHeader };
+    const app = config.identifier
+      ? `scrive-mcp;${__VERSION__};${config.identifier}`
+      : `scrive-mcp;${__VERSION__}`;
+    this.headers = {
+      authorization: config.authHeader,
+      "x-scrive-app": app,
+    };
     this.fetchImpl = config.fetchImpl ?? fetch;
   }
 

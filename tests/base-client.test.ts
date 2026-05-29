@@ -110,7 +110,10 @@ describe("HttpClient", () => {
     });
 
     await client.request({ url: "x", method: "GET", headers: { authorization: "Bearer tok" } });
-    expect(requests[0].headers).toEqual({ authorization: "Bearer tok" });
+    expect(requests[0].headers).toEqual({
+      authorization: "Bearer tok",
+      "x-scrive-app": `scrive-mcp;${__VERSION__}`,
+    });
   });
 
   it("throws HttpError on non-ok response with JSON body", async () => {

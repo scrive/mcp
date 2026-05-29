@@ -17,6 +17,21 @@ describe("readHttpConfig", () => {
     expect(config.scopes).toEqual(["full"]);
     expect(config.corsOrigins).toEqual(["https://chat.example.com", "https://claude.example.com"]);
     expect(config.disableDnsRebindingProtection).toBe(false);
+    expect(config.identifier).toBeUndefined();
+  });
+
+  it("picks up the additional identifier when set", () => {
+    const config = readHttpConfig({
+      PORT: "8080",
+      AUTH_SERVER_URL: "https://oauth2.scrive.com",
+      SCRIVE_BASE_URL: "https://scrive.com",
+      RESOURCE_URL: "https://example.com/mcp",
+      SCOPES: "full",
+      ALLOWED_CORS_ORIGINS: "*",
+      ADDITIONAL_IDENTIFIER: "test-value",
+    });
+
+    expect(config.identifier).toBe("test-value");
   });
 
   it("recognizes the dns rebinding override", () => {

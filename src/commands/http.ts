@@ -50,6 +50,7 @@ export interface HttpConfig {
   scopes: string[];
   corsOrigins: string[];
   disableDnsRebindingProtection: boolean;
+  identifier?: string;
 }
 
 export function readHttpConfig(env: NodeJS.ProcessEnv): HttpConfig {
@@ -61,6 +62,7 @@ export function readHttpConfig(env: NodeJS.ProcessEnv): HttpConfig {
     scopes: requireEnv("SCOPES", env).split(/\s+/).filter(Boolean),
     corsOrigins: parseOrigins(requireEnv("ALLOWED_CORS_ORIGINS", env)),
     disableDnsRebindingProtection: env.DISABLE_DNS_REBINDING_PROTECTION === "true",
+    identifier: env.ADDITIONAL_IDENTIFIER,
   };
 }
 
@@ -105,7 +107,11 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
 
   app.post("/mcp", authMiddleware, async (req, res) => {
     const token = req.auth!.token;
-    const clientConfig = { baseUrl: config.scriveBaseUrl, authHeader: `Bearer ${token}` };
+    const clientConfig = {
+      baseUrl: config.scriveBaseUrl,
+      authHeader: `Bearer ${token}`,
+      identifier: config.identifier,
+    };
     const documentClient = new DocumentClient(clientConfig);
     const journeyClient = new JourneyClient(clientConfig);
     const server = createServer({

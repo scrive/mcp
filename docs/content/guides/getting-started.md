@@ -16,7 +16,7 @@ This guide covers the stdio setup with Claude Desktop.
 The package is published to the public npm registry, so no authentication is required.
 
 ```sh
-npm install -g @scrive/mcp
+npm install -g @scrive_ab/mcp
 ```
 
 This installs the `scrive-mcp` command globally.

@@ -1,5 +1,4 @@
 import {
-  getUiCapability,
   registerAppResource,
   registerAppTool,
   RESOURCE_MIME_TYPE,
@@ -160,12 +159,11 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     ],
   }));
 
-  server.server.oninitialized = () => {
-    const uiCap = getUiCapability(server.server.getClientCapabilities());
-    if (uiCap?.mimeTypes?.includes(RESOURCE_MIME_TYPE)) {
-      registerPickerTools();
-    }
-  };
+  // Register picker tools unconditionally — Claude.ai does not advertise the
+  // experimental `ui` capability, so gating on it hides the tools from the
+  // primary target client. Non-UI clients that pick these up will simply see a
+  // tool that responds with an instructional text message.
+  registerPickerTools();
 
   server.registerTool("list_documents", listDocumentsConfig, listDocumentsHandler(documentClient));
 

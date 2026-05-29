@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import {
   registerAppResource,
   registerAppTool,
@@ -212,4 +214,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
   return server;
 }
 
-const fileUploadResourceUri = "ui://file_upload/app.html";
+// MCP App cache busting — hashing once per module load seemed like the best
+// option for now.
+const fileUploadHash = createHash("sha256").update(fileUploadHtml).digest("hex").slice(0, 12);
+const fileUploadResourceUri = `ui://file_upload/${fileUploadHash}/app.html`;

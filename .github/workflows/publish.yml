@@ -13,11 +13,10 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   publish:
-    name: Publish to GitHub Packages
+    name: Publish to npm
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     steps:
@@ -46,12 +45,12 @@ jobs:
         with:
           node-version: "24"
           cache: pnpm
-          registry-url: "https://npm.pkg.github.com"
+          registry-url: "https://registry.npmjs.org"
       - if: steps.version.outputs.changed == 'true'
         run: pnpm install --frozen-lockfile
       - if: steps.version.outputs.changed == 'true'
         run: pnpm build
       - if: steps.version.outputs.changed == 'true'
-        run: pnpm publish --no-git-checks --access restricted
+        run: pnpm publish --no-git-checks --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

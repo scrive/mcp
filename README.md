@@ -2,6 +2,8 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server in TypeScript that integrates with [Scrive](https://www.scrive.com/) for document automation.
 
+> **New here?** Follow the [Getting Started guide](https://scrive.github.io/mcp/guides/getting-started/) for a quick walkthrough. Full user-facing documentation lives at [scrive.github.io/mcp](https://scrive.github.io/mcp/). This README covers building and developing the server.
+
 ## Prerequisites
 
 - Node.js 24+

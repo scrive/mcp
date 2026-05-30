@@ -1,61 +1,96 @@
-import { spawn } from "node:child_process";
-import http from "node:http";
 import { stdin as input, stderr as output } from "node:process";
 import readline from "node:readline/promises";
 
+import type { AuthCredentials } from "../config.js";
 import { writeConfig } from "../config.js";
-import { renderCallbackPage } from "../ui/oauth-callback/page.js";
 
-interface OAuthCredentials {
+interface LoginData {
   server: string;
-  clientId: string;
-  clientSecret: string;
+  email: string;
+  password: string;
 }
 
-interface TemporaryCredentials {
-  token: string;
-  tokenSecret: string;
+function promptPassword(query: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    output.write(query);
+
+    const characters: string[] = [];
+    const wasRaw = input.isRaw;
+
+    const cleanup = (): void => {
+      input.removeListener("data", onData);
+      if (input.isTTY) {
+        input.setRawMode(wasRaw);
+      }
+      input.pause();
+    };
+
+    const onData = (chunk: string): void => {
+      for (const character of chunk) {
+        switch (character) {
+          case "\n":
+          case "\r":
+          case "\u0004": // Ctrl-D
+            output.write("\n");
+            cleanup();
+            resolve(characters.join(""));
+            return;
+          case "\u0003": // Ctrl-C
+            output.write("\n");
+            cleanup();
+            reject(new Error("cancelled"));
+            return;
+          case "\u007f": // Backspace / Delete
+          case "\b":
+            if (characters.length > 0) {
+              characters.pop();
+              output.write("\b \b");
+            }
+            break;
+          default:
+            // Ignore control characters (escape sequences, arrow keys, etc.).
+            if (character >= " ") {
+              characters.push(character);
+              output.write("*");
+            }
+        }
+      }
+    };
+
+    if (input.isTTY) {
+      input.setRawMode(true);
+    }
+    input.resume();
+    input.setEncoding("utf8");
+    input.on("data", onData);
+  });
 }
 
-interface CallbackResult {
-  token: string;
-  verifier: string;
-}
-
-interface TokenCredentials {
-  accessToken: string;
-  accessSecret: string;
-}
-
-async function promptCredentials(): Promise<OAuthCredentials> {
+async function promptCredentials(): Promise<LoginData> {
   const rl = readline.createInterface({ input, output });
 
+  let server: string;
+  let email: string;
   try {
-    const server = (await rl.question("Server (e.g. scrive.com): ")).trim();
+    server = (await rl.question("Server (e.g. scrive.com): ")).trim();
     if (!server) {
       throw new Error("server is required");
     }
 
-    const clientId = (await rl.question("Client ID: ")).trim();
-    if (!clientId) {
-      throw new Error("client id is required");
+    email = (await rl.question("Email: ")).trim();
+    if (!email) {
+      throw new Error("email is required");
     }
-
-    const clientSecret = (await rl.question("Client secret: ")).trim();
-    if (!clientSecret) {
-      throw new Error("client secret is required");
-    }
-
-    return { server, clientId, clientSecret };
   } finally {
     rl.close();
   }
-}
 
-function oauthHeader(params: Record<string, string>): string {
-  return Object.entries(params)
-    .map(([key, value]) => `${key}="${encodeURIComponent(value)}"`)
-    .join(", ");
+  const password = await promptPassword("Password: ");
+  if (!password) {
+    throw new Error("password is required");
+  }
+
+  return { server, email, password };
 }
 
 function humanizeNetworkError(error: unknown, server: string): Error {
@@ -75,210 +110,63 @@ function humanizeNetworkError(error: unknown, server: string): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
-async function requestTemporaryCredentials(
-  env: OAuthCredentials,
-  callbackUrl: string,
+async function fetchLoginData(
+  credentials: LoginData,
   fetchImpl: typeof fetch,
-): Promise<TemporaryCredentials> {
-  const url = `https://${env.server}/oauth/temporarycredentials?privileges=FULL_ACCESS`;
-  const authorization = oauthHeader({
-    oauth_signature_method: "PLAINTEXT",
-    oauth_consumer_key: env.clientId,
-    oauth_signature: `${env.clientSecret}&aaaaaa`,
-    oauth_callback: callbackUrl,
+): Promise<AuthCredentials> {
+  const url = `https://${credentials.server}/api/v2/getpersonaltoken`;
+  const body = new URLSearchParams({
+    email: credentials.email,
+    password: credentials.password,
   });
 
   let response: Response;
   try {
     response = await fetchImpl(url, {
-      method: "GET",
-      headers: { authorization },
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body,
       signal: AbortSignal.timeout(30_000),
     });
   } catch (error) {
-    throw humanizeNetworkError(error, env.server);
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `authentication failed (HTTP ${response.status}) — check your server address, Client ID, and Client Secret`,
-    );
-  }
-
-  const body = new URLSearchParams(await response.text());
-  const token = body.get("oauth_token");
-  const tokenSecret = body.get("oauth_token_secret");
-
-  if (!token || !tokenSecret) {
-    throw new Error("temporary credentials response missing oauth_token or oauth_token_secret");
-  }
-
-  return { token, tokenSecret };
-}
-
-function waitForCallback(server: http.Server, signal: AbortSignal): Promise<CallbackResult> {
-  return new Promise((resolve, reject) => {
-    signal.addEventListener("abort", () => {
-      reject(new Error("timed out waiting for authorization callback"));
-    });
-
-    server.on("request", (request, response) => {
-      const url = new URL(request.url ?? "/", `http://localhost`);
-      if (url.pathname !== "/callback") {
-        response.writeHead(404);
-        response.end();
-        return;
-      }
-
-      const token = url.searchParams.get("oauth_token");
-      const verifier = url.searchParams.get("oauth_verifier");
-
-      if (!token || !verifier) {
-        response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
-        response.end(renderCallbackPage("denied"));
-        reject(new Error("authorization was denied by the user"));
-        return;
-      }
-
-      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      response.end(renderCallbackPage("success"));
-      resolve({ token, verifier });
-    });
-  });
-}
-
-async function exchangeTokenCredentials(
-  env: OAuthCredentials,
-  temporaryToken: string,
-  temporaryTokenSecret: string,
-  verifier: string,
-  fetchImpl: typeof fetch,
-): Promise<TokenCredentials> {
-  const url = `https://${env.server}/oauth/tokencredentials`;
-  const authorization = oauthHeader({
-    oauth_signature_method: "PLAINTEXT",
-    oauth_consumer_key: env.clientId,
-    oauth_token: temporaryToken,
-    oauth_verifier: verifier,
-    oauth_signature: `${env.clientSecret}&${temporaryTokenSecret}`,
-  });
-
-  let response: Response;
-  try {
-    response = await fetchImpl(url, {
-      method: "GET",
-      headers: { authorization },
-      signal: AbortSignal.timeout(30_000),
-    });
-  } catch (error) {
-    throw humanizeNetworkError(error, env.server);
+    throw humanizeNetworkError(error, credentials.server);
   }
 
   if (response.status === 401 || response.status === 403) {
-    throw new Error("token exchange failed — the authorization may have expired, try again");
+    throw new Error("authentication failed — check your email and password");
   }
 
   if (!response.ok) {
-    throw new Error(`failed to exchange token credentials (HTTP ${response.status})`);
+    throw new Error(`failed to get personal access credentials (HTTP ${response.status})`);
   }
 
-  const body = new URLSearchParams(await response.text());
-  const accessToken = body.get("oauth_token");
-  const accessSecret = body.get("oauth_token_secret");
-
-  if (!accessToken || !accessSecret) {
-    throw new Error("token credentials response missing oauth_token or oauth_token_secret");
+  let data: Partial<AuthCredentials>;
+  try {
+    data = (await response.json()) as Partial<AuthCredentials>;
+  } catch {
+    throw new Error("personal access credentials response was not valid JSON");
   }
 
-  return { accessToken, accessSecret };
-}
-
-function listenOnRandomPort(server: http.Server): Promise<number> {
-  return new Promise((resolve, reject) => {
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (address === null || typeof address === "string") {
-        reject(new Error("failed to bind callback server"));
-        return;
-      }
-      resolve(address.port);
-    });
-  });
-}
-
-function closeServer(server: http.Server): Promise<void> {
-  return new Promise((resolve) => {
-    server.closeAllConnections();
-    server.close(() => resolve());
-  });
-}
-
-function openBrowserCommand(): { command: string; args: (url: string) => string[] } {
-  switch (process.platform) {
-    case "darwin":
-      return { command: "open", args: (url) => [url] };
-    case "win32":
-      return { command: "cmd", args: (url) => ["/c", "start", "", url] };
-    default:
-      return { command: "xdg-open", args: (url) => [url] };
+  if (!data.apitoken || !data.apisecret || !data.accesstoken || !data.accesssecret) {
+    throw new Error("personal access credentials response missing fields");
   }
-}
 
-function openUrl(url: string): void {
-  const browser = openBrowserCommand();
-  spawn(browser.command, browser.args(url), { stdio: "ignore", detached: true }).unref();
+  return {
+    apitoken: data.apitoken,
+    apisecret: data.apisecret,
+    accesstoken: data.accesstoken,
+    accesssecret: data.accesssecret,
+  };
 }
 
 export async function runAuth(
-  credentials?: OAuthCredentials,
+  credentials?: LoginData,
   fetchImpl: typeof fetch = fetch,
-  openImpl: (url: string) => void = openUrl,
 ): Promise<void> {
-  const { server, clientId, clientSecret } = credentials ?? (await promptCredentials());
+  const resolved = credentials ?? (await promptCredentials());
+  const auth = await fetchLoginData(resolved, fetchImpl);
 
-  const callbackServer = http.createServer();
-  const port = await listenOnRandomPort(callbackServer);
-  const callbackUrl = `http://localhost:${port}/callback`;
+  await writeConfig({ server: resolved.server, auth });
 
-  const abortController = new AbortController();
-  const timeout = setTimeout(() => abortController.abort(), 300_000);
-
-  try {
-    const callbackPromise = waitForCallback(callbackServer, abortController.signal);
-
-    const temporaryCredentials = await requestTemporaryCredentials(
-      { server, clientId, clientSecret },
-      callbackUrl,
-      fetchImpl,
-    );
-
-    const authorizationUrl = `https://${server}/oauth/authorization?oauth_token=${encodeURIComponent(temporaryCredentials.token)}`;
-    openImpl(authorizationUrl);
-    output.write("Waiting for authorization in browser...\n");
-
-    const callbackResult = await callbackPromise;
-
-    const tokenCredentials = await exchangeTokenCredentials(
-      { server, clientId, clientSecret },
-      callbackResult.token,
-      temporaryCredentials.tokenSecret,
-      callbackResult.verifier,
-      fetchImpl,
-    );
-
-    await writeConfig({
-      server,
-      auth: {
-        apitoken: clientId,
-        apisecret: clientSecret,
-        accesstoken: tokenCredentials.accessToken,
-        accesssecret: tokenCredentials.accessSecret,
-      },
-    });
-
-    output.write("Authorization successful. Config saved.\n");
-  } finally {
-    clearTimeout(timeout);
-    await closeServer(callbackServer);
-  }
+  output.write("Authorization successful. Config saved.\n");
 }

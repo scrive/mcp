@@ -12,11 +12,20 @@ function execName(): string {
   return value.split("/").pop() ?? "scrive-mcp";
 }
 
+function usage(): string {
+  return `${execName()} ${__VERSION__}\nusage: ${execName()} <auth|stdio|http|version>`;
+}
+
 async function main(): Promise<void> {
   const command = process.argv[2];
   if (!command) {
-    console.error(`usage: ${execName()} <command>`);
+    console.error(usage());
     process.exitCode = 1;
+    return;
+  }
+
+  if (command === "version") {
+    console.log(__VERSION__);
     return;
   }
 
@@ -38,7 +47,7 @@ async function main(): Promise<void> {
       await runHttp(allowedDirectories);
       return;
     default:
-      console.error(`unknown command: ${command}`);
+      console.error(`unknown command: ${command}\n${usage()}`);
       process.exitCode = 1;
       return;
   }

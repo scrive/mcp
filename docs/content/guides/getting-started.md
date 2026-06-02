@@ -21,13 +21,7 @@ npm install -g @scrive_ab/mcp
 
 This installs the `scrive-mcp` command globally.
 
-### 2. Get OAuth credentials from Scrive
-
-1. Sign in to your Scrive account.
-2. Go to **Account settings → Integrations**.
-3. Generate a **Client ID** and **Client Secret** for the MCP integration.
-
-### 3. Authenticate
+### 2. Authenticate
 
 Run:
 
@@ -35,9 +29,9 @@ Run:
 scrive-mcp auth
 ```
 
-The command prompts for your Scrive server, the Client ID, and the Client Secret. It opens your browser to complete OAuth and saves the credentials to a well-known location on your hard drive.
+The command prompts for your Scrive server, your account email, and your password (the password is masked as you type). It exchanges them for personal access credentials and saves them to a well-known location on your hard drive.
 
-### 4. Configure Claude Desktop
+### 3. Configure Claude Desktop
 
 Edit Claude Desktop's config file:
 
@@ -59,6 +53,6 @@ Add a `scrive` entry under `mcpServers`. After `stdio`, list one or more directo
 
 Restart Claude Desktop. The Scrive tools appear in the tool list (look for the hammer icon).
 
-### 5. Verify
+### 4. Verify
 
 Ask Claude _"List my Scrive documents"_. The `list_documents` tool runs and returns your documents.

@@ -37,46 +37,50 @@ export type ConfirmationDeliveryMethod =
 
 export type NotificationDeliveryMethod = "email" | "mobile" | "email_mobile" | "none";
 
-export type AuthenticationMethodToView =
-  | "standard"
-  | "sms_pin"
-  | "dk_mitid"
-  | "dk_mitid_erhverv"
-  | "fi_tupas"
-  | "freja"
-  | "freja_orgid"
-  | "nl_idin"
-  | "no_bankid"
-  | "oneid"
-  | "onfido"
-  | "onfido_document_check"
-  | "onfido_document_and_photo_check"
-  | "se_bankid"
-  | "verimi";
+export const AUTH_METHODS_TO_VIEW = [
+  "standard",
+  "sms_pin",
+  "dk_mitid",
+  "dk_mitid_erhverv",
+  "fi_tupas",
+  "freja",
+  "freja_orgid",
+  "nl_idin",
+  "no_bankid",
+  "oneid",
+  "onfido",
+  "onfido_document_check",
+  "onfido_document_and_photo_check",
+  "se_bankid",
+  "verimi",
+] as const;
+export type AuthenticationMethodToView = (typeof AUTH_METHODS_TO_VIEW)[number];
 
-export type AuthenticationMethodToSign =
-  | "standard"
-  | "sms_pin"
-  | "dk_mitid"
-  | "dk_mitid_erhverv"
-  | "fi_tupas"
-  | "freja"
-  | "freja_orgid"
-  | "nl_idin"
-  | "no_bankid"
-  | "no_bankid_qes"
-  | "oneid"
-  | "onfido"
-  | "onfido_document_check"
-  | "onfido_document_and_photo_check"
-  | "se_bankid"
-  | "swisscom_qes"
-  | "swisscom_qes_with_srs"
-  | "verimi_qes"
-  | "itsme_qes"
-  | "smart_id_qes"
-  | "scrive_qes"
-  | "scrive_qes_global";
+export const AUTH_METHODS_TO_SIGN = [
+  "standard",
+  "sms_pin",
+  "dk_mitid",
+  "dk_mitid_erhverv",
+  "fi_tupas",
+  "freja",
+  "freja_orgid",
+  "nl_idin",
+  "no_bankid",
+  "no_bankid_qes",
+  "oneid",
+  "onfido",
+  "onfido_document_check",
+  "onfido_document_and_photo_check",
+  "se_bankid",
+  "swisscom_qes",
+  "swisscom_qes_with_srs",
+  "verimi_qes",
+  "itsme_qes",
+  "smart_id_qes",
+  "scrive_qes",
+  "scrive_qes_global",
+] as const;
+export type AuthenticationMethodToSign = (typeof AUTH_METHODS_TO_SIGN)[number];
 
 export type ScriveLanguage =
   | "cs"

@@ -22,21 +22,6 @@ export type JourneyConfirmationMethod =
 
 // Journey/Flow uses its own provider enum, distinct from the eSign
 // AuthenticationMethodTo{Sign,View} enums (e.g. se_bank_id vs se_bankid).
-export const JOURNEY_AUTH_PROVIDERS_TO_SIGN = [
-  "onfido",
-  "sms_otp",
-  "se_bank_id",
-  "dk_mit_id",
-  "no_bank_id",
-  "no_bank_id_qes",
-  "ftn",
-  "swisscom",
-  "verimi",
-  "scrive_qes",
-  "scrive_qes_global",
-] as const;
-export type JourneyAuthProviderToSign = (typeof JOURNEY_AUTH_PROVIDERS_TO_SIGN)[number];
-
 export const JOURNEY_AUTH_PROVIDERS_TO_VIEW = [
   "onfido",
   "sms_otp",
@@ -46,6 +31,16 @@ export const JOURNEY_AUTH_PROVIDERS_TO_VIEW = [
   "ftn",
 ] as const;
 export type JourneyAuthProviderToView = (typeof JOURNEY_AUTH_PROVIDERS_TO_VIEW)[number];
+
+export const JOURNEY_AUTH_PROVIDERS_TO_SIGN = [
+  ...JOURNEY_AUTH_PROVIDERS_TO_VIEW,
+  "no_bank_id_qes",
+  "swisscom",
+  "verimi",
+  "scrive_qes",
+  "scrive_qes_global",
+] as const;
+export type JourneyAuthProviderToSign = (typeof JOURNEY_AUTH_PROVIDERS_TO_SIGN)[number];
 
 export interface JourneyAuthenticationConfig<P> {
   provider: P;

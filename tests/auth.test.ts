@@ -2,10 +2,19 @@ import { readFile, mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runAuth } from "../src/commands/auth.js";
 import { configPath } from "../src/config.js";
+
+// Prevent tests from accessing the real keychain
+vi.mock("@napi-rs/keyring", () => ({
+  Entry: class {
+    constructor() {
+      throw new Error("keychain disabled in tests");
+    }
+  },
+}));
 
 const testCredentials = {
   server: "scrive.example.com",
@@ -90,18 +99,9 @@ function createOAuthMocks(
 }
 
 describe("runAuth", () => {
-  let savedHome: string | undefined;
-
   beforeEach(async () => {
-    savedHome = process.env.HOME;
-    const tempHome = await mkdtemp(path.join(os.tmpdir(), "scrive-mcp-test-"));
-    process.env.HOME = tempHome;
-  });
-
-  afterEach(() => {
-    if (savedHome !== undefined) {
-      process.env.HOME = savedHome;
-    }
+    vi.stubEnv("HOME", await mkdtemp(path.join(os.tmpdir(), "scrive-mcp-test-")));
+    vi.stubEnv("SCRIVE_MCP_INSECURE_STORAGE", undefined);
   });
 
   it("fails early with actionable hint when temporary credentials are rejected", async () => {
@@ -152,7 +152,16 @@ describe("runAuth", () => {
     );
   });
 
+  it("aborts when the keychain is unavailable and insecure storage is not enabled", async () => {
+    const { fetchImpl, openImpl } = createOAuthMocks();
+
+    await expect(runAuth(testCredentials, fetchImpl, openImpl)).rejects.toThrow(
+      "could not store credentials in the OS keychain",
+    );
+  });
+
   it("completes the full OAuth flow correctly", async () => {
+    vi.stubEnv("SCRIVE_MCP_INSECURE_STORAGE", "true");
     const { fetchImpl, openImpl, fetchCalls, openCalls } = createOAuthMocks();
 
     await runAuth(testCredentials, fetchImpl, openImpl);

@@ -36,6 +36,17 @@ node dist/index.js auth
 
 This prompts for your Scrive server and OAuth client credentials (from your Scrive Integration settings), then opens your browser to authorize the application.
 
+By default, credentials are stored in your OS keychain. Alternatively, if a keychain is unavailable on your system, you can configure the server to store credentials in a plain-text file on your disk:
+
+```bash
+export SCRIVE_MCP_INSECURE_STORAGE=true
+```
+
+`SCRIVE_MCP_INSECURE_STORAGE` selects the storage backend for both reading and writing, with no fallback between them. Two consequences:
+
+- If you use it, set it everywhere the server runs, not just for `auth` — including the `env` block of your MCP client config. Credentials written to the plain-text file are not read back unless the variable is also set when the server starts.
+- Upgrading from a version that stored credentials in a plain-text file requires re-running `auth` to store them in the keychain (or setting `SCRIVE_MCP_INSECURE_STORAGE=true` to keep using the file). Re-running `auth` does not delete the old plain-text file — remove it yourself if you no longer want it on disk.
+
 ## Running
 
 ### Stdio transport

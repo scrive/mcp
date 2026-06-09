@@ -21,7 +21,7 @@ export default defineConfig({
       fileName: "index",
     },
     rollupOptions: {
-      external: [/^node:/, /^@modelcontextprotocol/, "express", "zod"],
+      external: [/^node:/, /^@modelcontextprotocol/, /^@napi-rs\//, "express", "zod"],
       output: {
         banner: "#!/usr/bin/env node",
       },
@@ -33,6 +33,7 @@ export default defineConfig({
     },
   },
   test: {
+    unstubEnvs: true,
     alias: {
       "#ui": path.join(here, "src", "ui"),
     },

@@ -95,6 +95,7 @@ export DISABLE_DNS_REBINDING_PROTECTION=true
 | `list_documents`           | List documents with filtering and sorting options.         |
 | `get_document`             | Retrieve a document's full JSON representation.            |
 | `add_party`                | Add a signing party to an existing document.               |
+| `update_party`             | Update a party's role, name, or email on a document.       |
 | `start_signing`            | Start the signing flow for a document.                     |
 | `remind_document`          | Send reminders to signatories who have not signed yet.     |
 | `get_usage_stats`          | Retrieve daily or monthly Scrive usage statistics.         |

@@ -42,6 +42,7 @@ import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-d
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
 import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
 import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
+import { updatePartyConfig, updatePartyHandler } from "./tools/update-party.js";
 
 export interface ServerDependencies {
   documentClient: DocumentClient;
@@ -198,6 +199,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
   );
 
   server.registerTool("add_party", addPartyConfig, withRateLimit(addPartyHandler(documentClient)));
+
+  server.registerTool(
+    "update_party",
+    updatePartyConfig,
+    withRateLimit(updatePartyHandler(documentClient)),
+  );
 
   server.registerTool(
     "start_signing",

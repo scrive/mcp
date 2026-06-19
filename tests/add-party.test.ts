@@ -32,7 +32,7 @@ describe("addPartyHandler", () => {
       document_id: "doc-1",
       name: "Alice",
       email: "alice@test.com",
-      role: "signing_party",
+      signatory_role: "signing_party",
     });
 
     const updateBody = requests[1].body as URLSearchParams;
@@ -75,7 +75,7 @@ describe("addPartyHandler", () => {
       document_id: "doc-1",
       name: "Alice",
       email: "alice@test.com",
-      role: "signing_party",
+      signatory_role: "signing_party",
     });
 
     const withoutAuth = JSON.parse((requests[1].body as URLSearchParams).get("document")!)
@@ -92,10 +92,10 @@ describe("addPartyHandler", () => {
       document_id: "doc-1",
       name: "Bob Builder",
       email: "bob@test.com",
-      role: "signing_party",
-      authentication_to_sign: "se_bankid",
-      authentication_to_view: "sms_pin",
-      authentication_to_view_archived: "se_bankid",
+      signatory_role: "signing_party",
+      authentication_method_to_sign: "se_bankid",
+      authentication_method_to_view: "sms_pin",
+      authentication_method_to_view_archived: "se_bankid",
       personal_number: "199001011234",
       mobile_number: "+46700000000",
     });

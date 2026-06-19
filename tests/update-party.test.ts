@@ -94,4 +94,65 @@ describe("updatePartyHandler", () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("missing");
   });
+
+  it("drops is_signatory when changing the role so the role is not overridden by the stale flag", async () => {
+    const { fetchImpl, requests } = fakeFetch([
+      {
+        method: "GET",
+        path: "/api/v2/documents/doc-1/get",
+        response: {
+          id: "doc-1",
+          parties: [{ id: "p-1", is_signatory: true, signatory_role: "signing_party", fields: [] }],
+        },
+      },
+      { method: "POST", path: "/api/v2/documents/doc-1/update", response: { id: "doc-1" } },
+    ]);
+    const client = new DocumentClient({
+      baseUrl: "http://test",
+      authHeader: "test-auth",
+      fetchImpl,
+    });
+    const handler = updatePartyHandler(client);
+
+    const result = await handler({
+      document_id: "doc-1",
+      party_id: "p-1",
+      signatory_role: "viewer",
+    });
+
+    expect(result.isError).toBe(false);
+    const party = JSON.parse((requests[1].body as URLSearchParams).get("document")!).parties[0];
+    expect(party.signatory_role).toBe("viewer");
+    expect(party.is_signatory).toBeUndefined();
+  });
+
+  it("leaves is_signatory untouched when the role is not being changed", async () => {
+    const { fetchImpl, requests } = fakeFetch([
+      {
+        method: "GET",
+        path: "/api/v2/documents/doc-1/get",
+        response: {
+          id: "doc-1",
+          parties: [{ id: "p-1", is_signatory: true, signatory_role: "signing_party", fields: [] }],
+        },
+      },
+      { method: "POST", path: "/api/v2/documents/doc-1/update", response: { id: "doc-1" } },
+    ]);
+    const client = new DocumentClient({
+      baseUrl: "http://test",
+      authHeader: "test-auth",
+      fetchImpl,
+    });
+    const handler = updatePartyHandler(client);
+
+    const result = await handler({
+      document_id: "doc-1",
+      party_id: "p-1",
+      email: "new@test.com",
+    });
+
+    expect(result.isError).toBe(false);
+    const party = JSON.parse((requests[1].body as URLSearchParams).get("document")!).parties[0];
+    expect(party.is_signatory).toBe(true);
+  });
 });

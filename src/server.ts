@@ -141,6 +141,7 @@ export function createServer(dependencies: ServerDependencies): McpServer {
             text: `Please select one or more PDF files to add to draft ${draft_id}${name ? ` as "${name}"` : ""}.`,
           },
         ],
+        structuredContent: { draft_id, ...(name ? { name } : {}) },
       }),
     );
 

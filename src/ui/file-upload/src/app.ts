@@ -5,7 +5,7 @@ import { type UploadResult, createUploader, readFileAsBase64 } from "./uploader.
 const app = new App({ name: "file_upload", version: "1.0.0" });
 
 interface AddDocumentToDraftArgs {
-  draft_id: string;
+  draft_id?: string;
   name?: string;
 }
 
@@ -75,17 +75,12 @@ const uploader = createUploader(
   document.getElementById("status")!,
 );
 
-await app.connect();
-
-app.ontoolinput = (params) => {
-  const args = (params.arguments ?? {}) as Record<string, unknown>;
-
-  if ("draft_id" in args) {
-    const draftArgs = args as unknown as AddDocumentToDraftArgs;
+function init({ draft_id, name }: AddDocumentToDraftArgs): void {
+  if (draft_id) {
     uploader.init({
       multiple: true,
       label: "Drop PDFs here",
-      upload: draftUpload(draftArgs.draft_id, draftArgs.name),
+      upload: draftUpload(draft_id, name),
     });
   } else {
     uploader.init({
@@ -94,4 +89,8 @@ app.ontoolinput = (params) => {
       upload: createUpload(),
     });
   }
-};
+}
+
+app.ontoolresult = (result) => init((result.structuredContent ?? {}) as AddDocumentToDraftArgs);
+
+await app.connect();

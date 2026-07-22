@@ -31,6 +31,14 @@ export class DocumentClient extends HttpClient {
     return response.data;
   }
 
+  async createFromTemplate(documentId: string): Promise<ScriveDocument> {
+    const response = await this.request<ScriveDocument>({
+      url: `/api/v2/documents/newfromtemplate/${documentId}`,
+      method: "POST",
+    });
+    return response.data;
+  }
+
   async listDocuments(params: ListDocumentsParams): Promise<ListDocumentsResponse> {
     const queryParams: Record<string, string> = {
       offset: String(params.offset),

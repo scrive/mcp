@@ -29,6 +29,10 @@ import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
 import { cancelDocumentConfig, cancelDocumentHandler } from "./tools/cancel-document.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
 import {
+  createFromTemplateConfig,
+  createFromTemplateHandler,
+} from "./tools/create-from-template.js";
+import {
   createDocumentUploadConfig,
   createDocumentUploadHandler,
 } from "./tools/create-document-upload.js";
@@ -244,6 +248,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "get_document",
     getDocumentConfig,
     withRateLimit(getDocumentHandler(documentClient)),
+  );
+
+  server.registerTool(
+    "create_from_template",
+    createFromTemplateConfig,
+    withRateLimit(createFromTemplateHandler(documentClient)),
   );
 
   server.registerTool("add_party", addPartyConfig, withRateLimit(addPartyHandler(documentClient)));

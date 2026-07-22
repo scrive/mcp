@@ -41,6 +41,7 @@ import { getUsageStatsConfig, getUsageStatsHandler } from "./tools/get-usage-sta
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
+import { setFileConfig, setFileHandler } from "./tools/set-file.js";
 import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
 import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
 import { updatePartyConfig, updatePartyHandler } from "./tools/update-party.js";
@@ -87,6 +88,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       "add_document_to_draft",
       addDocumentToDraftConfig,
       withRateLimit(addDocumentToDraftHandler(journeyClient, allowedDirectories)),
+    );
+
+    server.registerTool(
+      "set_file",
+      setFileConfig,
+      withRateLimit(setFileHandler(documentClient, allowedDirectories)),
     );
   }
 

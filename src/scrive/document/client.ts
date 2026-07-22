@@ -19,6 +19,18 @@ export class DocumentClient extends HttpClient {
     return response.data;
   }
 
+  async setFile(documentId: string, file: File): Promise<ScriveDocument> {
+    const formData = new FormData();
+    formData.set("file", file);
+
+    const response = await this.request<ScriveDocument>({
+      url: `/api/v2/documents/${documentId}/setfile`,
+      method: "POST",
+      body: formData,
+    });
+    return response.data;
+  }
+
   async listDocuments(params: ListDocumentsParams): Promise<ListDocumentsResponse> {
     const queryParams: Record<string, string> = {
       offset: String(params.offset),

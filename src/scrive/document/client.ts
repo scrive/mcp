@@ -73,6 +73,13 @@ export class DocumentClient extends HttpClient {
     });
   }
 
+  async cancelDocument(documentId: string): Promise<void> {
+    await this.request({
+      url: `/api/v2/documents/${documentId}/cancel`,
+      method: "POST",
+    });
+  }
+
   async getUsageStats(params: UsageStatsParams): Promise<unknown> {
     const { period, ...rest } = params;
     const queryParams = Object.fromEntries(

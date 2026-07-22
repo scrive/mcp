@@ -26,6 +26,7 @@ import {
   addParticipantToDraftHandler,
 } from "./tools/add-participant-to-draft.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
+import { cancelDocumentConfig, cancelDocumentHandler } from "./tools/cancel-document.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
 import {
   createDocumentUploadConfig,
@@ -216,6 +217,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "remind_document",
     remindDocumentConfig,
     withRateLimit(remindDocumentHandler(documentClient)),
+  );
+
+  server.registerTool(
+    "cancel_document",
+    cancelDocumentConfig,
+    withRateLimit(cancelDocumentHandler(documentClient)),
   );
 
   server.registerTool(

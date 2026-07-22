@@ -82,25 +82,27 @@ export const AUTH_METHODS_TO_SIGN = [
 ] as const;
 export type AuthenticationMethodToSign = (typeof AUTH_METHODS_TO_SIGN)[number];
 
-export type ScriveLanguage =
-  | "cs"
-  | "da"
-  | "de"
-  | "el"
-  | "en"
-  | "es"
-  | "et"
-  | "fi"
-  | "fr"
-  | "hu"
-  | "is"
-  | "it"
-  | "lt"
-  | "lv"
-  | "nl"
-  | "pl"
-  | "pt"
-  | "sv";
+export const SCRIVE_LANGUAGES = [
+  "cs",
+  "da",
+  "de",
+  "el",
+  "en",
+  "es",
+  "et",
+  "fi",
+  "fr",
+  "hu",
+  "is",
+  "it",
+  "lt",
+  "lv",
+  "nl",
+  "pl",
+  "pt",
+  "sv",
+] as const;
+export type ScriveLanguage = (typeof SCRIVE_LANGUAGES)[number];
 
 export type DocumentSortField = "title" | "status" | "mtime" | "author";
 export type SortOrder = "ascending" | "descending";

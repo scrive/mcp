@@ -49,6 +49,7 @@ import { setFileConfig, setFileHandler } from "./tools/set-file.js";
 import { setFileUploadConfig, setFileUploadHandler } from "./tools/set-file-upload.js";
 import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
 import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
+import { updateDocumentConfig, updateDocumentHandler } from "./tools/update-document.js";
 import { updatePartyConfig, updatePartyHandler } from "./tools/update-party.js";
 
 export interface ServerDependencies {
@@ -254,6 +255,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "create_from_template",
     createFromTemplateConfig,
     withRateLimit(createFromTemplateHandler(documentClient)),
+  );
+
+  server.registerTool(
+    "update_document",
+    updateDocumentConfig,
+    withRateLimit(updateDocumentHandler(documentClient)),
   );
 
   server.registerTool("add_party", addPartyConfig, withRateLimit(addPartyHandler(documentClient)));

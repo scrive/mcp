@@ -42,6 +42,7 @@ import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-document
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
 import { setFileConfig, setFileHandler } from "./tools/set-file.js";
+import { setFileUploadConfig, setFileUploadHandler } from "./tools/set-file-upload.js";
 import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
 import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
 import { updatePartyConfig, updatePartyHandler } from "./tools/update-party.js";
@@ -156,12 +157,51 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 
     registerAppTool(
       server,
+      pickerName("set_file"),
+      {
+        description:
+          "Sets the main PDF file of a document in Preparation. Opens a file picker for the user to select the PDF.",
+        inputSchema: {
+          document_id: z.string(),
+        },
+        annotations: {
+          title: "Set Document Main File",
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: true,
+        },
+        _meta: { ui: { resourceUri: fileUploadResourceUri } },
+      },
+      async ({ document_id }: { document_id: string }) => ({
+        content: [
+          {
+            type: "text" as const,
+            text: `Please select a PDF file to set as the main file of document ${document_id}.`,
+          },
+        ],
+        structuredContent: { document_id },
+      }),
+    );
+
+    registerAppTool(
+      server,
       "_create_document_upload",
       {
         ...createDocumentUploadConfig,
         _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
       },
       withRateLimit(createDocumentUploadHandler(documentClient)),
+    );
+
+    registerAppTool(
+      server,
+      "_set_file_upload",
+      {
+        ...setFileUploadConfig,
+        _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
+      },
+      withRateLimit(setFileUploadHandler(documentClient)),
     );
 
     registerAppTool(

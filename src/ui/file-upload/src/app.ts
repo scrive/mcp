@@ -4,8 +4,9 @@ import { type UploadResult, createUploader, readFileAsBase64 } from "./uploader.
 
 const app = new App({ name: "file_upload", version: "1.0.0" });
 
-interface AddDocumentToDraftArgs {
+interface PickerArgs {
   draft_id?: string;
+  document_id?: string;
   name?: string;
 }
 
@@ -67,6 +68,33 @@ function draftUpload(
   };
 }
 
+function setFileUpload(documentId: string): (file: File) => Promise<UploadResult> {
+  return async (file) => {
+    let fileData: string;
+    try {
+      fileData = await readFileAsBase64(file);
+    } catch {
+      return { fileName: file.name, success: false, message: "Failed to read file" };
+    }
+    try {
+      const result = await app.callServerTool({
+        name: "_set_file_upload",
+        arguments: { document_id: documentId, file_name: file.name, file_data: fileData },
+      });
+      const text = result.content?.find((b) => b.type === "text")?.text;
+      return result.isError
+        ? { fileName: file.name, success: false, message: text ?? "Upload failed" }
+        : { fileName: file.name, success: true, message: text ?? "Main file set" };
+    } catch (err) {
+      return {
+        fileName: file.name,
+        success: false,
+        message: err instanceof Error ? err.message : String(err),
+      };
+    }
+  };
+}
+
 const uploader = createUploader(
   app,
   document.getElementById("drop-zone")!,
@@ -75,8 +103,14 @@ const uploader = createUploader(
   document.getElementById("status")!,
 );
 
-function init({ draft_id, name }: AddDocumentToDraftArgs): void {
-  if (draft_id) {
+function init({ draft_id, document_id, name }: PickerArgs): void {
+  if (document_id) {
+    uploader.init({
+      multiple: false,
+      label: "Drop a PDF here",
+      upload: setFileUpload(document_id),
+    });
+  } else if (draft_id) {
     uploader.init({
       multiple: true,
       label: "Drop PDFs here",
@@ -91,6 +125,6 @@ function init({ draft_id, name }: AddDocumentToDraftArgs): void {
   }
 }
 
-app.ontoolresult = (result) => init((result.structuredContent ?? {}) as AddDocumentToDraftArgs);
+app.ontoolresult = (result) => init((result.structuredContent ?? {}) as PickerArgs);
 
 await app.connect();

@@ -67,6 +67,14 @@ export class DocumentClient extends HttpClient {
     return response.data;
   }
 
+  async downloadMainFile(documentId: string): Promise<ArrayBuffer> {
+    const response = await this.request<ArrayBuffer>({
+      url: `/api/v2/documents/${documentId}/files/main`,
+      method: "GET",
+    });
+    return response.data;
+  }
+
   async updateDocument(
     documentId: string,
     document: Partial<ScriveDocument>,

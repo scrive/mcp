@@ -45,6 +45,7 @@ import { getUsageStatsConfig, getUsageStatsHandler } from "./tools/get-usage-sta
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
+import { downloadDocumentConfig, downloadDocumentHandler } from "./tools/download-document.js";
 import { setFileConfig, setFileHandler } from "./tools/set-file.js";
 import { setFileUploadConfig, setFileUploadHandler } from "./tools/set-file-upload.js";
 import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
@@ -100,6 +101,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       "set_file",
       setFileConfig,
       withRateLimit(setFileHandler(documentClient, allowedDirectories)),
+    );
+
+    server.registerTool(
+      "download_document",
+      downloadDocumentConfig,
+      withRateLimit(downloadDocumentHandler(documentClient, allowedDirectories)),
     );
   }
 

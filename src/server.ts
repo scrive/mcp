@@ -8,6 +8,7 @@ import {
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+import fileDownloadHtml from "#ui/file-download/app.html?raw";
 import fileUploadHtml from "#ui/file-upload/app.html?raw";
 
 import type { DocumentClient } from "./scrive/document/client.js";
@@ -45,6 +46,10 @@ import { getUsageStatsConfig, getUsageStatsHandler } from "./tools/get-usage-sta
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
+import {
+  downloadDocumentContentConfig,
+  downloadDocumentContentHandler,
+} from "./tools/download-document-content.js";
 import { downloadDocumentConfig, downloadDocumentHandler } from "./tools/download-document.js";
 import { setFileConfig, setFileHandler } from "./tools/set-file.js";
 import { setFileUploadConfig, setFileUploadHandler } from "./tools/set-file-upload.js";
@@ -225,6 +230,44 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       },
       withRateLimit(addDocumentToDraftUploadHandler(journeyClient)),
     );
+
+    registerAppTool(
+      server,
+      pickerName("download_document"),
+      {
+        description: "Downloads a document's signed PDF. Opens a panel with a download button.",
+        inputSchema: {
+          document_id: z.string(),
+        },
+        annotations: {
+          title: "Download Document",
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: true,
+        },
+        _meta: { ui: { resourceUri: fileDownloadResourceUri } },
+      },
+      async ({ document_id }: { document_id: string }) => ({
+        content: [
+          {
+            type: "text" as const,
+            text: `Open the panel to download document ${document_id}.`,
+          },
+        ],
+        structuredContent: { document_id },
+      }),
+    );
+
+    registerAppTool(
+      server,
+      "_download_document",
+      {
+        ...downloadDocumentContentConfig,
+        _meta: { ui: { resourceUri: fileDownloadResourceUri, visibility: ["app"] as const } },
+      },
+      withRateLimit(downloadDocumentContentHandler(documentClient)),
+    );
   };
 
   // Register the UI resource eagerly so the SDK installs the resource request
@@ -236,6 +279,16 @@ export function createServer(dependencies: ServerDependencies): McpServer {
         uri: fileUploadResourceUri,
         mimeType: RESOURCE_MIME_TYPE,
         text: fileUploadHtml,
+      },
+    ],
+  }));
+
+  registerAppResource(server, "file_download_ui", fileDownloadResourceUri, {}, async () => ({
+    contents: [
+      {
+        uri: fileDownloadResourceUri,
+        mimeType: RESOURCE_MIME_TYPE,
+        text: fileDownloadHtml,
       },
     ],
   }));
@@ -345,3 +398,6 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 // option for now.
 const fileUploadHash = createHash("sha256").update(fileUploadHtml).digest("hex").slice(0, 12);
 const fileUploadResourceUri = `ui://file_upload/${fileUploadHash}/app.html`;
+
+const fileDownloadHash = createHash("sha256").update(fileDownloadHtml).digest("hex").slice(0, 12);
+const fileDownloadResourceUri = `ui://file_download/${fileDownloadHash}/app.html`;

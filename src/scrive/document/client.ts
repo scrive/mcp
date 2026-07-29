@@ -78,14 +78,20 @@ export class DocumentClient extends HttpClient {
   async updateDocument(
     documentId: string,
     document: Partial<ScriveDocument>,
+    objectVersion?: number,
   ): Promise<ScriveDocument> {
+    const body = new URLSearchParams({
+      document_id: documentId,
+      document: JSON.stringify(document),
+    });
+    if (objectVersion !== undefined) {
+      body.set("object_version", String(objectVersion));
+    }
+
     const response = await this.request<ScriveDocument>({
       url: `/api/v2/documents/${documentId}/update`,
       method: "POST",
-      body: new URLSearchParams({
-        document_id: documentId,
-        document: JSON.stringify(document),
-      }),
+      body,
     });
     return response.data;
   }

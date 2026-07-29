@@ -1,6 +1,6 @@
 {
   "name": "@scrive_ab/mcp",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Model Context Protocol server that integrates with Scrive for document automation and e-signing.",
   "keywords": [
     "ai",

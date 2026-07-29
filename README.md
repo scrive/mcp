@@ -92,12 +92,17 @@ export DISABLE_DNS_REBINDING_PROTECTION=true
 | Tool                       | Description                                                |
 | -------------------------- | ---------------------------------------------------------- |
 | `create_document`          | Upload a PDF file from an absolute local path.             |
+| `create_from_template`     | Create a new document from an existing template.           |
 | `list_documents`           | List documents with filtering and sorting options.         |
 | `get_document`             | Retrieve a document's full JSON representation.            |
+| `update_document`          | Update the metadata of a document in Preparation.          |
+| `set_file`                 | Set a local PDF as a Preparation document's main file.     |
 | `add_party`                | Add a signing party to an existing document.               |
 | `update_party`             | Update a party's role, name, or email on a document.       |
 | `start_signing`            | Start the signing flow for a document.                     |
 | `remind_document`          | Send reminders to signatories who have not signed yet.     |
+| `cancel_document`          | Cancel a pending document.                                 |
+| `download_document`        | Download a document's main PDF to a local directory.       |
 | `get_usage_stats`          | Retrieve daily or monthly Scrive usage statistics.         |
 | `create_flow_draft`        | Create a new Journey flow draft.                           |
 | `add_document_to_draft`    | Add a PDF document to an existing Journey draft.           |

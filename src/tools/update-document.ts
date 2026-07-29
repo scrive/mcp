@@ -3,6 +3,7 @@ import { z } from "zod";
 import { SCRIVE_LANGUAGES } from "../scrive/document/types.js";
 import type { DocumentClient } from "../scrive/document/client.js";
 import type { ScriveDocument, ScriveParty } from "../scrive/document/types.js";
+import { DOCUMENT_PROPERTIES, selectDocumentProperties } from "./get-document.js";
 import { applyPartyParams, partyParamsSchema } from "./party-params.js";
 
 const partyEntrySchema = partyParamsSchema
@@ -67,6 +68,12 @@ export const updateDocumentConfig = {
       .describe(
         "The document's `object_version` as you last saw it. The update is rejected with a 409 if the document has changed since, which prevents overwriting someone else's concurrent edit.",
       ),
+    return_properties: z
+      .array(z.enum(DOCUMENT_PROPERTIES))
+      .optional()
+      .describe(
+        'Filters the returned document to these top-level properties. Omit to return the whole document, which is worth doing to check the result — but a document with many parties runs to tens of thousands of tokens, so narrow this to something like ["id", "object_version"] when updating one.',
+      ),
   }),
   annotations: {
     title: "Update Document",
@@ -80,7 +87,12 @@ export const updateDocumentConfig = {
 export type UpdateDocumentArgs = z.infer<typeof updateDocumentConfig.inputSchema>;
 
 export function updateDocumentHandler(client: DocumentClient) {
-  return async ({ document_id, document, object_version }: UpdateDocumentArgs) => {
+  return async ({
+    document_id,
+    document,
+    object_version,
+    return_properties,
+  }: UpdateDocumentArgs) => {
     try {
       const { parties, ...metadata } = document;
       const payload: Partial<ScriveDocument> = { ...metadata };
@@ -114,7 +126,12 @@ export function updateDocumentHandler(client: DocumentClient) {
       );
       return {
         isError: false,
-        content: [{ type: "text" as const, text: JSON.stringify(updated) }],
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(selectDocumentProperties(updated, return_properties)),
+          },
+        ],
       };
     } catch (error) {
       return {

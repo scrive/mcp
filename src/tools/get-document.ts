@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { DocumentClient } from "../scrive/document/client.js";
 import type { ScriveDocument } from "../scrive/document/types.js";
 
-const DOCUMENT_PROPERTIES = [
+export const DOCUMENT_PROPERTIES = [
   "id",
   "title",
   "parties",
@@ -36,6 +36,17 @@ const DOCUMENT_PROPERTIES = [
   "is_deleted",
 ] as const satisfies readonly (keyof ScriveDocument)[];
 
+export type DocumentProperty = (typeof DOCUMENT_PROPERTIES)[number];
+
+export function selectDocumentProperties(
+  document: ScriveDocument,
+  properties?: DocumentProperty[],
+): Partial<ScriveDocument> {
+  return properties?.length
+    ? Object.fromEntries(properties.map((key) => [key, document[key]]))
+    : document;
+}
+
 export const getDocumentConfig = {
   description: "Retrieves a document's full JSON representation",
   inputSchema: z.object({
@@ -60,10 +71,7 @@ export function getDocumentHandler(client: DocumentClient) {
   return async ({ document_id, properties }: GetDocumentArgs) => {
     try {
       const document = await client.getDocument(document_id);
-
-      const result = properties?.length
-        ? Object.fromEntries(properties.map((key) => [key, document[key]]))
-        : document;
+      const result = selectDocumentProperties(document, properties);
 
       return {
         isError: false,

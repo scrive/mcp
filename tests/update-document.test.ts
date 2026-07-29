@@ -144,6 +144,53 @@ describe("updateDocumentHandler", () => {
     expect(sentParty.fields).toEqual(existingParty.fields);
   });
 
+  it("narrows the returned document to return_properties", async () => {
+    const { fetchImpl } = fakeFetch([
+      {
+        method: "POST",
+        path: "/api/v2/documents/doc-1/update",
+        response: {
+          id: "doc-1",
+          object_version: 9,
+          title: "Big",
+          parties: [{ id: "p1" }, { id: "p2" }],
+        },
+      },
+    ]);
+    const client = new DocumentClient({
+      baseUrl: "http://test",
+      authHeader: "test-auth",
+      fetchImpl,
+    });
+
+    const result = await updateDocumentHandler(client)({
+      document_id: "doc-1",
+      document: { title: "Big" },
+      return_properties: ["id", "object_version"],
+    });
+
+    expect(JSON.parse(result.content[0].text)).toEqual({ id: "doc-1", object_version: 9 });
+  });
+
+  it("returns the whole document when return_properties is omitted", async () => {
+    const full = { id: "doc-1", title: "Whole", parties: [{ id: "p1" }] };
+    const { fetchImpl } = fakeFetch([
+      { method: "POST", path: "/api/v2/documents/doc-1/update", response: full },
+    ]);
+    const client = new DocumentClient({
+      baseUrl: "http://test",
+      authHeader: "test-auth",
+      fetchImpl,
+    });
+
+    const result = await updateDocumentHandler(client)({
+      document_id: "doc-1",
+      document: { title: "Whole" },
+    });
+
+    expect(JSON.parse(result.content[0].text)).toEqual(full);
+  });
+
   it("sends an explicitly supplied object_version", async () => {
     const { fetchImpl, requests } = fakeFetch([
       { method: "POST", path: "/api/v2/documents/doc-1/update", response: { id: "doc-1" } },

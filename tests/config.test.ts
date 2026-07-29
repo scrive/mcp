@@ -1,10 +1,38 @@
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { authHeader, type Config, loadConfigFrom, resolveConfigPath } from "../src/config.js";
+import {
+  authHeader,
+  type Config,
+  configPath,
+  loadConfig,
+  loadConfigFrom,
+  resolveConfigPath,
+  writeConfig,
+} from "../src/config.js";
+
+// In-memory stand-in for the OS keychain. `available` toggles whether the
+// native entry can be constructed; `stored` holds the single credential blob.
+const keychain = vi.hoisted(() => ({ available: true, stored: null as string | null }));
+
+vi.mock("@napi-rs/keyring", () => ({
+  Entry: class {
+    constructor() {
+      if (!keychain.available) {
+        throw new Error("Platform failure: A default keychain could not be found.");
+      }
+    }
+    getPassword(): string | null {
+      return keychain.stored;
+    }
+    setPassword(value: string): void {
+      keychain.stored = value;
+    }
+  },
+}));
 
 function validConfig(): Config {
   return {
@@ -28,8 +56,8 @@ async function tempFile(name: string): Promise<string> {
   return path.join(dir, name);
 }
 
-describe("config", () => {
-  it("loads a valid config file", async () => {
+describe("loadConfigFrom", () => {
+  it("reads a valid config file", async () => {
     const filePath = await tempFile("config.json");
     const config = validConfig();
     await writeFile(filePath, JSON.stringify(config, null, 2));
@@ -66,12 +94,6 @@ describe("config", () => {
 
     await expect(loadConfigFrom(filePath)).rejects.toThrow("missing auth credentials");
   });
-
-  it("formats the oauth header", () => {
-    expect(authHeader(validConfig())).toBe(
-      'oauth_signature_method="PLAINTEXT", oauth_consumer_key="token", oauth_token="atoken", oauth_signature="secret&asecret"',
-    );
-  });
 });
 
 describe("resolveConfigPath", () => {
@@ -104,6 +126,75 @@ describe("resolveConfigPath", () => {
   it("falls back to ~/.config on linux when XDG_CONFIG_HOME is unset", () => {
     expect(resolveConfigPath("linux", "/home/test", {})).toBe(
       path.join("/home/test", ".config", "scrive-mcp", "config.json"),
+    );
+  });
+});
+
+describe("keychain config storage", () => {
+  beforeEach(async () => {
+    vi.stubEnv("HOME", await mkdtemp(path.join(os.tmpdir(), "scrive-mcp-kc-")));
+    vi.stubEnv("SCRIVE_MCP_INSECURE_STORAGE", undefined);
+    keychain.available = true;
+    keychain.stored = null;
+  });
+
+  it("stores credentials in the keychain", async () => {
+    const result = await writeConfig(validConfig());
+
+    expect(result).toEqual({ insecureStorageUsed: false });
+    expect(keychain.stored).toBe(JSON.stringify(validConfig()));
+  });
+
+  it("fails loudly when the keychain is unavailable on write", async () => {
+    keychain.available = false;
+
+    await expect(writeConfig(validConfig())).rejects.toThrow(
+      "could not store credentials in the OS keychain",
+    );
+  });
+
+  it("reads credentials from the keychain", async () => {
+    keychain.stored = JSON.stringify(validConfig());
+
+    await expect(loadConfig()).resolves.toEqual(validConfig());
+  });
+
+  it("reports not-found when the keychain has no entry", async () => {
+    await expect(loadConfig()).rejects.toThrow("config not found");
+  });
+
+  it("fails loudly when the keychain is unavailable on read", async () => {
+    keychain.available = false;
+
+    await expect(loadConfig()).rejects.toThrow("could not read credentials from the OS keychain");
+  });
+});
+
+describe("insecure config storage", () => {
+  beforeEach(async () => {
+    vi.stubEnv("HOME", await mkdtemp(path.join(os.tmpdir(), "scrive-mcp-cfg-")));
+    vi.stubEnv("SCRIVE_MCP_INSECURE_STORAGE", "true");
+  });
+
+  it("writes credentials to a plaintext file and reports the insecure path", async () => {
+    const result = await writeConfig(validConfig());
+
+    expect(result).toEqual({ insecureStorageUsed: true });
+    const raw = await readFile(configPath(), "utf8");
+    expect(JSON.parse(raw)).toEqual(validConfig());
+  });
+
+  it("loads credentials written in insecure mode", async () => {
+    await writeConfig(validConfig());
+
+    await expect(loadConfig()).resolves.toEqual(validConfig());
+  });
+});
+
+describe("authHeader", () => {
+  it("formats the oauth header", () => {
+    expect(authHeader(validConfig())).toBe(
+      'oauth_signature_method="PLAINTEXT", oauth_consumer_key="token", oauth_token="atoken", oauth_signature="secret&asecret"',
     );
   });
 });

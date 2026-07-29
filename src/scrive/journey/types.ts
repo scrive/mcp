@@ -20,6 +20,39 @@ export type JourneyConfirmationMethod =
   | "eboks"
   | "eboks_private";
 
+// Journey/Flow uses its own provider enum, distinct from the eSign
+// AuthenticationMethodTo{Sign,View} enums (e.g. se_bank_id vs se_bankid).
+export const JOURNEY_AUTH_PROVIDERS_TO_VIEW = [
+  "onfido",
+  "sms_otp",
+  "se_bank_id",
+  "dk_mit_id",
+  "no_bank_id",
+  "ftn",
+] as const;
+export type JourneyAuthProviderToView = (typeof JOURNEY_AUTH_PROVIDERS_TO_VIEW)[number];
+
+export const JOURNEY_AUTH_PROVIDERS_TO_SIGN = [
+  ...JOURNEY_AUTH_PROVIDERS_TO_VIEW,
+  "no_bank_id_qes",
+  "swisscom",
+  "verimi",
+  "scrive_qes",
+  "scrive_qes_global",
+] as const;
+export type JourneyAuthProviderToSign = (typeof JOURNEY_AUTH_PROVIDERS_TO_SIGN)[number];
+
+export interface JourneyAuthenticationConfig<P> {
+  provider: P;
+  max_attempts?: number;
+}
+
+export interface JourneyParticipantAuthentications {
+  auth_to_sign?: JourneyAuthenticationConfig<JourneyAuthProviderToSign>;
+  auth_to_view?: JourneyAuthenticationConfig<JourneyAuthProviderToView>;
+  auth_to_view_archived?: JourneyAuthenticationConfig<JourneyAuthProviderToView>;
+}
+
 export interface JourneyAction {
   kind: JourneyActionKind;
   participant_id?: string;
@@ -49,6 +82,7 @@ export interface JourneyParticipant {
   invitation_method: JourneyInvitationMethod;
   confirmation_method: JourneyConfirmationMethod;
   fields: JourneyField[];
+  authentications?: JourneyParticipantAuthentications;
 }
 
 export interface JourneyGroup {

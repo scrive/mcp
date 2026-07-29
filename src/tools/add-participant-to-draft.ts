@@ -3,12 +3,20 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
 import type { JourneyClient } from "../scrive/journey/client.js";
+import {
+  JOURNEY_AUTH_PROVIDERS_TO_SIGN,
+  JOURNEY_AUTH_PROVIDERS_TO_VIEW,
+} from "../scrive/journey/types.js";
 import type {
   JourneyActionKind,
+  JourneyAuthProviderToSign,
+  JourneyAuthProviderToView,
   JourneyConfirmationMethod,
   JourneyDocument,
+  JourneyField,
   JourneyInvitationMethod,
   JourneyParticipant,
+  JourneyParticipantAuthentications,
   JourneyStep,
 } from "../scrive/journey/types.js";
 
@@ -25,6 +33,34 @@ export const addParticipantToDraftConfig = {
     confirmation_method: z
       .enum(["email", "sms", "email_and_sms", "none", "kivra", "eboks", "eboks_private"])
       .optional(),
+    authentication_to_sign: z
+      .enum(JOURNEY_AUTH_PROVIDERS_TO_SIGN)
+      .optional()
+      .describe(
+        "eID provider the participant must use to sign. Note Journey naming differs from eSign (se_bank_id, dk_mit_id, no_bank_id, ftn, sms_otp). sms_otp requires mobile_number. The account must have the provider enabled or start_flow will fail.",
+      ),
+    authentication_to_view: z
+      .enum(JOURNEY_AUTH_PROVIDERS_TO_VIEW)
+      .optional()
+      .describe(
+        "eID provider the participant must use to view documents before acting. Same prerequisites as authentication_to_sign.",
+      ),
+    authentication_to_view_archived: z
+      .enum(JOURNEY_AUTH_PROVIDERS_TO_VIEW)
+      .optional()
+      .describe(
+        "eID provider the participant must use to view the archived (finalised) documents.",
+      ),
+    personal_number: z
+      .string()
+      .optional()
+      .describe("Participant's national identification number (SSN), used by eID providers."),
+    mobile_number: z
+      .string()
+      .optional()
+      .describe(
+        "Participant's mobile number in E.164 format. Required when sms_otp authentication is used.",
+      ),
   }),
   annotations: {
     title: "Add Participant to Flow Draft",
@@ -42,6 +78,11 @@ export interface AddParticipantToDraftArgs {
   action?: JourneyActionKind;
   invitation_method?: JourneyInvitationMethod;
   confirmation_method?: JourneyConfirmationMethod;
+  authentication_to_sign?: JourneyAuthProviderToSign;
+  authentication_to_view?: JourneyAuthProviderToView;
+  authentication_to_view_archived?: JourneyAuthProviderToView;
+  personal_number?: string;
+  mobile_number?: string;
 }
 
 export function addParticipantToDraftHandler(client: JourneyClient) {
@@ -62,6 +103,8 @@ export function addParticipantToDraftHandler(client: JourneyClient) {
         action,
         invitationMethod,
         confirmationMethod,
+        buildAuthentications(args),
+        { personalNumber: args.personal_number, mobileNumber: args.mobile_number },
       );
       const participantId = participant.association_id;
       const participants = [
@@ -107,45 +150,87 @@ function buildParticipant(
   action: JourneyActionKind,
   invitationMethod: JourneyInvitationMethod,
   confirmationMethod: JourneyConfirmationMethod,
+  authentications: JourneyParticipantAuthentications | undefined,
+  identity: { personalNumber?: string; mobileNumber?: string },
 ): Participant {
   const [firstName, ...rest] = name.split(" ");
   const lastName = rest.join(" ");
 
-  return {
+  const fields: JourneyField[] = [
+    {
+      type: "name",
+      order: 1,
+      id: randomUUID(),
+      is_obligatory: false,
+      should_be_filled_by_sender: false,
+      placements: [],
+      value: firstName,
+    },
+    {
+      type: "name",
+      order: 2,
+      id: randomUUID(),
+      is_obligatory: false,
+      should_be_filled_by_sender: false,
+      placements: [],
+      value: lastName,
+    },
+    {
+      type: "email",
+      id: randomUUID(),
+      is_obligatory: true,
+      should_be_filled_by_sender: true,
+      is_editable_by_signatory: false,
+      placements: [],
+      value: email,
+    },
+  ];
+  if (identity.personalNumber) {
+    fields.push(buildIdentityField("personal_number", identity.personalNumber));
+  }
+  if (identity.mobileNumber) {
+    fields.push(buildIdentityField("mobile", identity.mobileNumber));
+  }
+
+  const participant: Participant = {
     association_id: randomUUID(),
     invitation_method: invitationMethod,
     confirmation_method: confirmationMethod,
-    fields: [
-      {
-        type: "name",
-        order: 1,
-        id: randomUUID(),
-        is_obligatory: false,
-        should_be_filled_by_sender: false,
-        placements: [],
-        value: firstName,
-      },
-      {
-        type: "name",
-        order: 2,
-        id: randomUUID(),
-        is_obligatory: false,
-        should_be_filled_by_sender: false,
-        placements: [],
-        value: lastName,
-      },
-      {
-        type: "email",
-        id: randomUUID(),
-        is_obligatory: true,
-        should_be_filled_by_sender: true,
-        is_editable_by_signatory: false,
-        placements: [],
-        value: email,
-      },
-    ],
+    fields,
     _action: action,
   };
+  if (authentications) {
+    participant.authentications = authentications;
+  }
+  return participant;
+}
+
+function buildIdentityField(type: "personal_number" | "mobile", value: string): JourneyField {
+  return {
+    type,
+    id: randomUUID(),
+    is_obligatory: false,
+    should_be_filled_by_sender: true,
+    is_editable_by_signatory: false,
+    placements: [],
+    value,
+  };
+}
+
+function buildAuthentications(
+  args: AddParticipantToDraftArgs,
+): JourneyParticipantAuthentications | undefined {
+  const authentications: JourneyParticipantAuthentications = {};
+  if (args.authentication_to_sign) {
+    authentications.auth_to_sign = { provider: args.authentication_to_sign };
+  }
+  if (args.authentication_to_view) {
+    authentications.auth_to_view = { provider: args.authentication_to_view };
+  }
+  if (args.authentication_to_view_archived) {
+    authentications.auth_to_view_archived = { provider: args.authentication_to_view_archived };
+  }
+  return Object.keys(authentications).length > 0 ? authentications : undefined;
 }
 
 function enrichParticipantsWithActions(

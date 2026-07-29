@@ -68,10 +68,18 @@ export class HttpClient {
       signal: config.signal ?? AbortSignal.timeout(30_000),
     });
 
-    const contentType = response.headers.get("content-type") ?? "";
-    const data = contentType.includes("application/json")
-      ? ((await response.json()) as T)
-      : ((await response.text()) as T);
+    const mimeType = (response.headers.get("content-type") ?? "").split(";")[0].trim();
+    let data: T;
+    switch (mimeType) {
+      case "application/json":
+        data = (await response.json()) as T;
+        break;
+      case "application/pdf":
+        data = (await response.arrayBuffer()) as T;
+        break;
+      default:
+        data = (await response.text()) as T;
+    }
 
     if (!response.ok) {
       throw new HttpError(response.status, data);

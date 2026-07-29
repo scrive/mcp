@@ -19,6 +19,26 @@ export class DocumentClient extends HttpClient {
     return response.data;
   }
 
+  async setFile(documentId: string, file: File): Promise<ScriveDocument> {
+    const formData = new FormData();
+    formData.set("file", file);
+
+    const response = await this.request<ScriveDocument>({
+      url: `/api/v2/documents/${documentId}/setfile`,
+      method: "POST",
+      body: formData,
+    });
+    return response.data;
+  }
+
+  async createFromTemplate(documentId: string): Promise<ScriveDocument> {
+    const response = await this.request<ScriveDocument>({
+      url: `/api/v2/documents/newfromtemplate/${documentId}`,
+      method: "POST",
+    });
+    return response.data;
+  }
+
   async listDocuments(params: ListDocumentsParams): Promise<ListDocumentsResponse> {
     const queryParams: Record<string, string> = {
       offset: String(params.offset),
@@ -47,14 +67,31 @@ export class DocumentClient extends HttpClient {
     return response.data;
   }
 
-  async updateDocument(documentId: string, document: ScriveDocument): Promise<ScriveDocument> {
+  async downloadMainFile(documentId: string): Promise<ArrayBuffer> {
+    const response = await this.request<ArrayBuffer>({
+      url: `/api/v2/documents/${documentId}/files/main`,
+      method: "GET",
+    });
+    return response.data;
+  }
+
+  async updateDocument(
+    documentId: string,
+    document: Partial<ScriveDocument>,
+    objectVersion?: number,
+  ): Promise<ScriveDocument> {
+    const body = new URLSearchParams({
+      document_id: documentId,
+      document: JSON.stringify(document),
+    });
+    if (objectVersion !== undefined) {
+      body.set("object_version", String(objectVersion));
+    }
+
     const response = await this.request<ScriveDocument>({
       url: `/api/v2/documents/${documentId}/update`,
       method: "POST",
-      body: new URLSearchParams({
-        document_id: documentId,
-        document: JSON.stringify(document),
-      }),
+      body,
     });
     return response.data;
   }
@@ -69,6 +106,13 @@ export class DocumentClient extends HttpClient {
   async remindDocument(documentId: string): Promise<void> {
     await this.request({
       url: `/api/v2/documents/${documentId}/remind`,
+      method: "POST",
+    });
+  }
+
+  async cancelDocument(documentId: string): Promise<void> {
+    await this.request({
+      url: `/api/v2/documents/${documentId}/cancel`,
       method: "POST",
     });
   }

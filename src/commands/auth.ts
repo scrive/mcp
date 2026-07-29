@@ -266,7 +266,7 @@ export async function runAuth(
       fetchImpl,
     );
 
-    await writeConfig({
+    const { insecureStorageUsed } = await writeConfig({
       server,
       auth: {
         apitoken: clientId,
@@ -277,6 +277,11 @@ export async function runAuth(
     });
 
     output.write("Authorization successful. Config saved.\n");
+    if (insecureStorageUsed) {
+      output.write(
+        "! SCRIVE_MCP_INSECURE_STORAGE is set — credentials saved as plaintext in the config file.\n",
+      );
+    }
   } finally {
     clearTimeout(timeout);
     await closeServer(callbackServer);

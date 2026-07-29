@@ -8,6 +8,7 @@ import {
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+import fileDownloadHtml from "#ui/file-download/app.html?raw";
 import fileUploadHtml from "#ui/file-upload/app.html?raw";
 
 import type { DocumentClient } from "./scrive/document/client.js";
@@ -26,7 +27,12 @@ import {
   addParticipantToDraftHandler,
 } from "./tools/add-participant-to-draft.js";
 import { addPartyConfig, addPartyHandler } from "./tools/add-party.js";
+import { cancelDocumentConfig, cancelDocumentHandler } from "./tools/cancel-document.js";
 import { createDocumentConfig, createDocumentHandler } from "./tools/create-document.js";
+import {
+  createFromTemplateConfig,
+  createFromTemplateHandler,
+} from "./tools/create-from-template.js";
 import {
   createDocumentUploadConfig,
   createDocumentUploadHandler,
@@ -40,8 +46,17 @@ import { getUsageStatsConfig, getUsageStatsHandler } from "./tools/get-usage-sta
 import { listDocumentsConfig, listDocumentsHandler } from "./tools/list-documents.js";
 import { listFlowDraftsConfig, listFlowDraftsHandler } from "./tools/list-flow-drafts.js";
 import { remindDocumentConfig, remindDocumentHandler } from "./tools/remind-document.js";
+import {
+  downloadDocumentContentConfig,
+  downloadDocumentContentHandler,
+} from "./tools/download-document-content.js";
+import { downloadDocumentConfig, downloadDocumentHandler } from "./tools/download-document.js";
+import { setFileConfig, setFileHandler } from "./tools/set-file.js";
+import { setFileUploadConfig, setFileUploadHandler } from "./tools/set-file-upload.js";
 import { startFlowConfig, startFlowHandler } from "./tools/start-flow.js";
 import { startSigningConfig, startSigningHandler } from "./tools/start-signing.js";
+import { updateDocumentConfig, updateDocumentHandler } from "./tools/update-document.js";
+import { updatePartyConfig, updatePartyHandler } from "./tools/update-party.js";
 
 export interface ServerDependencies {
   documentClient: DocumentClient;
@@ -85,6 +100,18 @@ export function createServer(dependencies: ServerDependencies): McpServer {
       "add_document_to_draft",
       addDocumentToDraftConfig,
       withRateLimit(addDocumentToDraftHandler(journeyClient, allowedDirectories)),
+    );
+
+    server.registerTool(
+      "set_file",
+      setFileConfig,
+      withRateLimit(setFileHandler(documentClient, allowedDirectories)),
+    );
+
+    server.registerTool(
+      "download_document",
+      downloadDocumentConfig,
+      withRateLimit(downloadDocumentHandler(documentClient, allowedDirectories)),
     );
   }
 
@@ -141,6 +168,36 @@ export function createServer(dependencies: ServerDependencies): McpServer {
             text: `Please select one or more PDF files to add to draft ${draft_id}${name ? ` as "${name}"` : ""}.`,
           },
         ],
+        structuredContent: { draft_id, ...(name ? { name } : {}) },
+      }),
+    );
+
+    registerAppTool(
+      server,
+      pickerName("set_file"),
+      {
+        description:
+          "Sets the main PDF file of a document in Preparation. Opens a file picker for the user to select the PDF.",
+        inputSchema: {
+          document_id: z.string(),
+        },
+        annotations: {
+          title: "Set Document Main File",
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: true,
+        },
+        _meta: { ui: { resourceUri: fileUploadResourceUri } },
+      },
+      async ({ document_id }: { document_id: string }) => ({
+        content: [
+          {
+            type: "text" as const,
+            text: `Please select a PDF file to set as the main file of document ${document_id}.`,
+          },
+        ],
+        structuredContent: { document_id },
       }),
     );
 
@@ -156,12 +213,60 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 
     registerAppTool(
       server,
+      "_set_file_upload",
+      {
+        ...setFileUploadConfig,
+        _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
+      },
+      withRateLimit(setFileUploadHandler(documentClient)),
+    );
+
+    registerAppTool(
+      server,
       "_add_document_to_draft_upload",
       {
         ...addDocumentToDraftUploadConfig,
         _meta: { ui: { resourceUri: fileUploadResourceUri, visibility: ["app"] as const } },
       },
       withRateLimit(addDocumentToDraftUploadHandler(journeyClient)),
+    );
+
+    registerAppTool(
+      server,
+      pickerName("download_document"),
+      {
+        description: "Downloads a document's signed PDF. Opens a panel with a download button.",
+        inputSchema: {
+          document_id: z.string(),
+        },
+        annotations: {
+          title: "Download Document",
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: true,
+        },
+        _meta: { ui: { resourceUri: fileDownloadResourceUri } },
+      },
+      async ({ document_id }: { document_id: string }) => ({
+        content: [
+          {
+            type: "text" as const,
+            text: `Open the panel to download document ${document_id}.`,
+          },
+        ],
+        structuredContent: { document_id },
+      }),
+    );
+
+    registerAppTool(
+      server,
+      "_download_document",
+      {
+        ...downloadDocumentContentConfig,
+        _meta: { ui: { resourceUri: fileDownloadResourceUri, visibility: ["app"] as const } },
+      },
+      withRateLimit(downloadDocumentContentHandler(documentClient)),
     );
   };
 
@@ -174,6 +279,16 @@ export function createServer(dependencies: ServerDependencies): McpServer {
         uri: fileUploadResourceUri,
         mimeType: RESOURCE_MIME_TYPE,
         text: fileUploadHtml,
+      },
+    ],
+  }));
+
+  registerAppResource(server, "file_download_ui", fileDownloadResourceUri, {}, async () => ({
+    contents: [
+      {
+        uri: fileDownloadResourceUri,
+        mimeType: RESOURCE_MIME_TYPE,
+        text: fileDownloadHtml,
       },
     ],
   }));
@@ -196,7 +311,25 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     withRateLimit(getDocumentHandler(documentClient)),
   );
 
+  server.registerTool(
+    "create_from_template",
+    createFromTemplateConfig,
+    withRateLimit(createFromTemplateHandler(documentClient)),
+  );
+
+  server.registerTool(
+    "update_document",
+    updateDocumentConfig,
+    withRateLimit(updateDocumentHandler(documentClient)),
+  );
+
   server.registerTool("add_party", addPartyConfig, withRateLimit(addPartyHandler(documentClient)));
+
+  server.registerTool(
+    "update_party",
+    updatePartyConfig,
+    withRateLimit(updatePartyHandler(documentClient)),
+  );
 
   server.registerTool(
     "start_signing",
@@ -208,6 +341,12 @@ export function createServer(dependencies: ServerDependencies): McpServer {
     "remind_document",
     remindDocumentConfig,
     withRateLimit(remindDocumentHandler(documentClient)),
+  );
+
+  server.registerTool(
+    "cancel_document",
+    cancelDocumentConfig,
+    withRateLimit(cancelDocumentHandler(documentClient)),
   );
 
   server.registerTool(
@@ -259,3 +398,6 @@ export function createServer(dependencies: ServerDependencies): McpServer {
 // option for now.
 const fileUploadHash = createHash("sha256").update(fileUploadHtml).digest("hex").slice(0, 12);
 const fileUploadResourceUri = `ui://file_upload/${fileUploadHash}/app.html`;
+
+const fileDownloadHash = createHash("sha256").update(fileDownloadHtml).digest("hex").slice(0, 12);
+const fileDownloadResourceUri = `ui://file_download/${fileDownloadHash}/app.html`;

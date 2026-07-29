@@ -1,15 +1,15 @@
 import { z } from "zod";
 
 import type { DocumentClient } from "../scrive/document/client.js";
-import type { SignatoryRole, ScriveParty } from "../scrive/document/types.js";
+import type { ScriveParty } from "../scrive/document/types.js";
+import { applyPartyParams, partyParamsSchema } from "./party-params.js";
 
 export const addPartyConfig = {
   description: "Adds a new party to a Scrive document",
-  inputSchema: z.object({
-    document_id: z.string(),
-    name: z.string(),
-    email: z.string(),
-    role: z.enum(["signing_party", "viewer", "approver"]),
+  inputSchema: partyParamsSchema.extend({ document_id: z.string() }).required({
+    name: true,
+    email: true,
+    signatory_role: true,
   }),
   annotations: {
     title: "Add Party to Document",
@@ -20,33 +20,19 @@ export const addPartyConfig = {
   },
 };
 
-export interface AddPartyArgs {
-  document_id: string;
-  name: string;
-  email: string;
-  role: SignatoryRole;
-}
+export type AddPartyArgs = z.infer<typeof addPartyConfig.inputSchema>;
 
 export function addPartyHandler(client: DocumentClient) {
   return async (args: AddPartyArgs) => {
     try {
-      const document = await client.getDocument(args.document_id);
-      const parties: ScriveParty[] = Array.isArray(document.parties) ? [...document.parties] : [];
+      const { document_id, ...params } = args;
 
-      const [firstName, ...rest] = args.name.split(" ");
-      const lastName = rest.join(" ");
+      const document = await client.getDocument(document_id);
+      const party: ScriveParty = { fields: [] };
+      applyPartyParams(party, params);
+      document.parties = [...(document.parties ?? []), party];
 
-      parties.push({
-        signatory_role: args.role,
-        fields: [
-          { type: "name", value: firstName, order: 1 },
-          { type: "name", value: lastName, order: 2 },
-          { type: "email", value: args.email },
-        ],
-      });
-
-      document.parties = parties;
-      await client.updateDocument(args.document_id, document);
+      await client.updateDocument(document_id, document);
       return {
         isError: false,
         content: [{ type: "text" as const, text: "Party added successfully." }],

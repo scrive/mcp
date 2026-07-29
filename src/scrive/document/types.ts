@@ -1,19 +1,22 @@
 export type SignatoryRole = "signing_party" | "viewer" | "approver";
 
-export type ScriveFieldType =
-  | "name"
-  | "full_name"
-  | "email"
-  | "mobile"
-  | "company"
-  | "personal_number"
-  | "company_number"
-  | "signature"
-  | "checkbox"
-  | "radiogroup"
-  | "text"
-  | "date"
-  | "sign_date";
+export const SCRIVE_FIELD_TYPES = [
+  "name",
+  "full_name",
+  "email",
+  "mobile",
+  "company",
+  "personal_number",
+  "company_number",
+  "signature",
+  "checkbox",
+  "radiogroup",
+  "text",
+  "multi_line_text",
+  "date",
+  "sign_date",
+] as const;
+export type ScriveFieldType = (typeof SCRIVE_FIELD_TYPES)[number];
 
 export type DocumentStatus =
   | "preparation"
@@ -25,17 +28,21 @@ export type DocumentStatus =
   | "rejected"
   | "document_error";
 
-export type DeliveryMethod = "email" | "mobile" | "email_mobile" | "pad" | "api";
+export const DELIVERY_METHODS = ["email", "mobile", "email_mobile", "pad", "api"] as const;
+export type DeliveryMethod = (typeof DELIVERY_METHODS)[number];
 
-export type ConfirmationDeliveryMethod =
-  | "email"
-  | "mobile"
-  | "email_mobile"
-  | "email_link"
-  | "email_link_mobile"
-  | "none";
+export const CONFIRMATION_DELIVERY_METHODS = [
+  "email",
+  "mobile",
+  "email_mobile",
+  "email_link",
+  "email_link_mobile",
+  "none",
+] as const;
+export type ConfirmationDeliveryMethod = (typeof CONFIRMATION_DELIVERY_METHODS)[number];
 
-export type NotificationDeliveryMethod = "email" | "mobile" | "email_mobile" | "none";
+export const NOTIFICATION_DELIVERY_METHODS = ["email", "mobile", "email_mobile", "none"] as const;
+export type NotificationDeliveryMethod = (typeof NOTIFICATION_DELIVERY_METHODS)[number];
 
 export const AUTH_METHODS_TO_VIEW = [
   "standard",
@@ -127,15 +134,21 @@ export type DocumentFilter =
   | { filter_by: "is_not_in_trash" }
   | { filter_by: "is_signable_on_pad" };
 
+export interface ScrivePlacementAnchor {
+  text: string;
+  index: number;
+  offset?: { x: number; y: number };
+}
+
 export interface ScriveFieldPlacement {
-  xrel: number;
-  yrel: number;
+  xrel?: number;
+  yrel?: number;
   wrel: number;
   hrel: number;
   fsrel: number;
-  page: number;
+  page?: number;
   tip?: string;
-  anchors?: unknown[];
+  anchors?: ScrivePlacementAnchor[];
 }
 
 export interface ScriveFieldCustomValidation {
@@ -159,10 +172,16 @@ export interface ScriveField {
   values?: string[];
   selected_value?: string;
   custom_validation?: ScriveFieldCustomValidation | null;
-  configuration?: {
-    start_date: unknown;
-    end_date: unknown;
-  } | null;
+  configuration?: ScriveDateFieldConfiguration | null;
+}
+
+export type ScriveDateConfig =
+  | { type: "relative-to-doc-view"; value: number }
+  | { type: "absolute"; value: string };
+
+export interface ScriveDateFieldConfiguration {
+  start_date?: ScriveDateConfig | null;
+  end_date?: ScriveDateConfig | null;
 }
 
 export interface SignatoryAttachment {

@@ -1,9 +1,7 @@
 name: Publish
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  push:
     branches: [main]
   workflow_dispatch:
 
@@ -19,11 +17,9 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 2
       - name: Check version change
         id: version

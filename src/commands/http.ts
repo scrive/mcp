@@ -12,6 +12,8 @@ import { JourneyClient } from "../scrive/journey/client.js";
 import { RateLimiter } from "../scrive/rate-limiter.js";
 import { createServer } from "../server.js";
 
+const DOCS_URL = "https://scrive.github.io/mcp/";
+
 function internalError(res: {
   headersSent: boolean;
   status: (code: number) => { json: (value: unknown) => void };
@@ -107,6 +109,9 @@ export function createHttpApp(config: HttpConfig, allowedDirectories: string[]) 
   const corsMiddleware = createCorsMiddleware(config.corsOrigins);
 
   app.use(corsMiddleware);
+  app.get("/", (_req, res) => {
+    res.redirect(302, DOCS_URL);
+  });
   app.options("/mcp", (_req, res) => {
     res.status(204).end();
   });

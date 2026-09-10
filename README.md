@@ -78,6 +78,7 @@ Set `ALLOWED_CORS_ORIGINS` to the exact web client origins that should be allowe
 
 The HTTP server exposes:
 
+- `/` — redirects to the documentation site at [scrive.github.io/mcp](https://scrive.github.io/mcp/).
 - `/.well-known/oauth-protected-resource`
 - `/mcp`
 
